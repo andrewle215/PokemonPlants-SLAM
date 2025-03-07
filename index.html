@@ -15,9 +15,18 @@
 <body style='margin: 0; overflow: hidden;'>
     <a-scene
         vr-mode-ui="enabled: false"
-		embedded
+        embedded
         arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false;'>
-        <a-entity gltf-model="./assets/magnemite/Cube" rotation="0 0 0" scale="0.5 0.5 0.5" gps-entity-place="longitude: -76.93644567079446; latitude: 38.990052561802585;" animation-mixer/>
+        
+        <!-- Custom Text Box -->
+        <a-entity 
+            gps-entity-place="longitude: -76.94476554493062; latitude: 38.98150458185;" 
+            position="0 1 -3" 
+            text="value: This is my custom text; color: white; width: 6; align: center;">
+        </a-entity>
+        
+        <!-- Camera -->
         <a-camera gps-camera rotation-reader></a-camera>
-	</a-scene>
+    </a-scene>
 </body>
+</html>

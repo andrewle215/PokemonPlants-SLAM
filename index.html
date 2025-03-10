@@ -8,22 +8,52 @@
     <script src="https://raw.githack.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.min.js"></script>
     <script src="https://raw.githack.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
     <script>
-        THREEx.ArToolkitContext.baseURL = 'https://raw.githack.com/jeromeetienne/ar.js/master/three.js/'
-    </script>
-</head>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('ABG_Database_101124wSID_cleaned_112824_wHornbake.csv')
+                .then(response => response.text())
+                .then(data => {
+                    let lines = data.split("\n").slice(1); // Skip header
+                    lines.forEach(line => {
+                        let [s_id,cname1,cname2,cname3,genus,species,cultivar,longitude,latitude,Plants_On_Hornbake] = line.split(",");
+                        let combinedName = [cname1, cname2, cname3, genus, species, cultivar]
+                                .filter(val => val !== "")
+                                .join(" ");
+ 
+                        let scene = document.querySelector("a-scene");
 
+                        // Create a small circle as a marker
+                        let circle = document.createElement("a-circle");
+                        circle.setAttribute("gps-entity-place", `longitude: ${longitude}; latitude: ${latitude}`);
+                        circle.setAttribute("radius", "0.5");
+                        circle.setAttribute("color", "red");
+                        circle.setAttribute("position", "0 1 -3");
+                        circle.setAttribute("class", "plant-marker");
+            
+                        // Create a text box (hidden initially)
+                        let textEntity = document.createElement("a-entity");
+                        textEntity.setAttribute("gps-entity-place", `longitude: ${longitude}; latitude: ${latitude}`);
+                        textEntity.setAttribute("text", `value: ${combinedName}; color: white; width: 6; align: center;`);
+                        textEntity.setAttribute("position", "0 1.5 -3");
+                        textEntity.setAttribute("visible", "false"); // Hidden by default
+            
+                        // Toggle text visibility when the circle is clicked
+                        circle.addEventListener("click", () => {
+                            let isVisible = textEntity.getAttribute("visible");
+                            textEntity.setAttribute("visible", !isVisible);
+                        });
+            
+                        scene.appendChild(circle);
+                        scene.appendChild(textEntity);
+                        });
+                    });
+                });
+        </script>
+</head>
 <body style='margin: 0; overflow: hidden;'>
     <a-scene
         vr-mode-ui="enabled: false"
         embedded
-        arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false;'>
-        
-        <!-- Custom Text Box -->
-        <a-entity 
-            gps-entity-place="longitude: -76.9447546; latitude: 38.9814824;" 
-            position="0 1 -3" 
-            text="value: This is my custom text; color: white; width: 6; align: center;">
-        </a-entity>
+        arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: true;'>
         
         <!-- Camera -->
         <a-camera gps-camera rotation-reader></a-camera>

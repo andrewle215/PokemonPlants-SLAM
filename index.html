@@ -15,13 +15,14 @@
         embedded
         arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: true;'>
         
-        <!-- User's Location Text -->
-        <a-entity id="user-location-text" position="0 2 -4"
-                  text="value: Getting location...; color: blue; width: 2; align: center;">
+        <!-- User's Location Text (Smaller and at Bottom) -->
+        <a-entity id="user-location-text" position="0 -2 -3"
+                  text="value: Getting location...; color: white; width: 2; align: center;">
         </a-entity>
 
         <!-- Camera -->
-        <a-camera id='camera1' look-controls-enabled='false' arjs-look-controls='smoothingFactor: 0.1' gps-projected-camera='gpsMinDistance: 5'> </a-camera>
+        <a-camera id='camera1' look-controls-enabled='false' arjs-look-controls='smoothingFactor: 0.1' gps-new-camera> 
+        </a-camera>
     </a-scene>
 
     <script>
@@ -31,23 +32,25 @@
 
             // Fetch and display user's GPS location
             if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(position => {
+                navigator.geolocation.watchPosition(position => {
                     let userLat = position.coords.latitude;
                     let userLon = position.coords.longitude;
 
-                    // Update the text with user's coordinates
-                    userText.setAttribute("text", `value: Your Location: ${userLat}, ${userLon};`);
+                    // Update text with user's coordinates
+                    userText.setAttribute("text", `value: Your Location: ${userLat.toFixed(6)}, ${userLon.toFixed(6)};`);
 
-                    // Create a blue marker for user's location
-                    let userMarker = document.createElement("a-circle");
-                    userMarker.setAttribute("gps-entity-place", `longitude: ${userLon}; latitude: ${userLat}`);
-                    userMarker.setAttribute("radius", "0.7");
-                    userMarker.setAttribute("color", "blue");
-                    userMarker.setAttribute("position", "0 1 -3");
-                    scene.appendChild(userMarker);
+                    // Create a blue marker for user's location (if not already present)
+                    if (!document.getElementById("user-marker")) {
+                        let userMarker = document.createElement("a-circle");
+                        userMarker.setAttribute("id", "user-marker");
+                        userMarker.setAttribute("gps-new-entity-place", `latitude: ${userLat}; longitude: ${userLon}`);
+                        userMarker.setAttribute("radius", "0.7");
+                        userMarker.setAttribute("color", "blue");
+                        scene.appendChild(userMarker);
+                    }
                 }, error => {
                     userText.setAttribute("text", "value: Unable to get location.");
-                });
+                }, { enableHighAccuracy: true });
             } else {
                 userText.setAttribute("text", "value: Geolocation not supported.");
             }
@@ -61,7 +64,7 @@
                         skipEmptyLines: true,
                         complete: function(results) {
                             results.data.forEach(row => {
-                                let { s_id, cname1, cname2, cname3, genus, species, cultivar, longitude, latitude, Plants_On_Hornbake } = row;
+                                let { cname1, cname2, cname3, genus, species, cultivar, longitude, latitude } = row;
 
                                 longitude = longitude?.trim();
                                 latitude = latitude?.trim();
@@ -73,15 +76,13 @@
                                     .join(" ");
 
                                 let circle = document.createElement("a-circle");
-                                circle.setAttribute("gps-entity-place", `longitude: ${longitude}; latitude: ${latitude}`);
+                                circle.setAttribute("gps-new-entity-place", `latitude: ${latitude}; longitude: ${longitude}`);
                                 circle.setAttribute("radius", "0.5");
                                 circle.setAttribute("color", "red");
-                                circle.setAttribute("position", "0 1 -3");
 
                                 let textEntity = document.createElement("a-entity");
-                                textEntity.setAttribute("gps-entity-place", `longitude: ${longitude}; latitude: ${latitude}`);
-                                textEntity.setAttribute("text", `value: ${combinedName}; color: white; width: 6; align: center;`);
-                                textEntity.setAttribute("position", "0 1.5 -3");
+                                textEntity.setAttribute("gps-new-entity-place", `latitude: ${latitude}; longitude: ${longitude}`);
+                                textEntity.setAttribute("text", `value: ${combinedName}; color: white; width: 4; align: center;`);
                                 textEntity.setAttribute("visible", "false");
 
                                 circle.addEventListener("click", () => {

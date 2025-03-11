@@ -14,14 +14,35 @@
       vr-mode-ui="enabled: false"
       arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;"
     >
+      <!-- Green dot -->
       <a-sphere
+        id="green-dot"
         radius="1"
         color="green"
         look-at="[gps-camera]"
         gps-entity-place="latitude: 38.98209680814852; longitude: -76.94327484870506;"
+        onclick="showTextBox()"
       ></a-sphere>
-      <a-camera gps-camera rotation-reader> </a-camera>
+
+      <!-- Invisible text box -->
+      <a-entity
+        id="text-box"
+        geometry="primitive: plane; height: 2; width: 4"
+        material="color: white; opacity: 0.8"
+        position="0 2 -4"
+        text="value: You clicked the dot!; align: center; color: black"
+        visible="false"
+      ></a-entity>
+
+      <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
+
+    <script>
+      function showTextBox() {
+        document.getElementById("text-box").setAttribute("visible", "true");
+      }
+    </script>
 </body>
+
 
 </html>

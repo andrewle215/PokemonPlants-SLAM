@@ -10,8 +10,8 @@ window.onload = () => {
                 .then(csvText => {
                     const places = parseCSV(csvText);
                     places.forEach(place => {
-                        const latitude = place.lat;
-                        const longitude = place.lon;
+                        const latitude = 38.9825090;
+                        const longitude =-76.9441840;
 
                         // Add place name
                         const placeText = document.createElement('a-link');

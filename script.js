@@ -5,19 +5,19 @@ window.onload = () => {
     navigator.geolocation.getCurrentPosition(
         function (position) {
             // Load locations from CSV
-            fetch('Test.csv')
+            fetch('ABG_Database_101124wSID_cleaned_112824_wHornbake.csv')
                 .then(response => response.text())
                 .then(csvText => {
                     const places = parseCSV(csvText);
                     places.forEach(place => {
-                        const latitude = 38.9825090;
-                        const longitude =-76.9441840;
+                        const latitude = place.lat;
+                        const longitude = place.lon;
 
                         // Add place name
                         const placeText = document.createElement('a-link');
                         placeText.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
                         placeText.setAttribute('title', place.name);
-                        placeText.setAttribute('scale', '15 15 15');
+                        placeText.setAttribute('scale', '0.5 0.5 0.5');
 
                         placeText.addEventListener('loaded', () => {
                             window.dispatchEvent(new CustomEvent('gps-entity-place-loaded'));
@@ -40,7 +40,12 @@ window.onload = () => {
 function parseCSV(csvText) {
     const rows = csvText.split('\n').slice(1); // Skip header row
     return rows.map(row => {
-        const [name, lat, lon] = row.split(',');
-        return { name: name.trim(), lat: parseFloat(lat), lon: parseFloat(lon) };
+        const [s_id, cname1, cname2, cname3, genus, species, cultivar, x, y, plantsOnHornbake] = row.split(',');
+
+        // Combine names and format output
+        const combinedName = [cname1, cname2, cname3].filter(name => name.trim()).join(' ');
+        const displayName = `${combinedName} (${genus})`;
+
+        return { name: displayName, lat: parseFloat(y), lon: parseFloat(x) }; // Assuming x=longitude, y=latitude
     }).filter(place => !isNaN(place.lat) && !isNaN(place.lon));
 }

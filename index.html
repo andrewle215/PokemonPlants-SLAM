@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
@@ -11,13 +10,37 @@
         THREEx.ArToolkitContext.baseURL = 'https://raw.githack.com/jeromeetienne/ar.js/master/three.js/'
     </script>
     <script src="./script.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+        }
+        #scene-container {
+            width: 70vw;
+            height: 100vh;
+        }
+        #info-container {
+            width: 30vw;
+            height: 100vh;
+            background: white;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+    </style>
 </head>
-
-<body style='margin: 0; overflow: hidden;'>
-    <a-scene 
-        vr-mode-ui='enabled: false' 
-        embedded
-        arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false;'>
-    <a-camera gps-camera="minDistance: 40;" rotation-reader></a-camera>
-</a-scene>
+<body>
+    <div id="scene-container">
+        <a-scene vr-mode-ui='enabled: false' embedded arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth:1280; displayHeight:960; debugUIEnabled: false;'>
+            <a-camera gps-camera="minDistance: 40;" rotation-reader></a-camera>
+        </a-scene>
+    </div>
+    <div id="info-container">
+        <h2>Current Location</h2>
+        <p id="user-location">Fetching location...</p>
+        <h2>Nearby Plants</h2>
+        <ul id="plant-list"></ul>
+    </div>
 </body>
+</html>

@@ -5,17 +5,14 @@ window.onload = () => {
     navigator.geolocation.getCurrentPosition(
         function (position) {
             // Load locations from CSV
-            fetch('locations.csv')
+            fetch('Test.csv')
                 .then(response => response.text())
                 .then(csvText => {
                     const places = parseCSV(csvText);
                     places.forEach(place => {
                         const latitude = 38.9813497;
                         const longitude = -76.9447825;
-                        // const latitude = place.lat;
-                        // const longitude = place.lon;
-                        // console.log(latitude);
-                        // console.log(longitude);
+
                         // Add place name
                         const placeText = document.createElement('a-link');
                         placeText.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);

@@ -5,14 +5,17 @@ window.onload = () => {
     navigator.geolocation.getCurrentPosition(
         function (position) {
             // Load locations from CSV
-            fetch('ABG_Database_101124wSID_cleaned_112824_wHornbake.csv')
+            fetch('locations.csv')
                 .then(response => response.text())
                 .then(csvText => {
                     const places = parseCSV(csvText);
                     places.forEach(place => {
-                        const latitude = place.lat;
-                        const longitude = place.lon;
-
+                        const latitude = 38.98150227270765;
+                        const longitude = -76.9447471533609;
+                        // const latitude = place.lat;
+                        // const longitude = place.lon;
+                        console.log(latitude);
+                        console.log(longitude);
                         // Add place name
                         const placeText = document.createElement('a-link');
                         placeText.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
@@ -40,12 +43,7 @@ window.onload = () => {
 function parseCSV(csvText) {
     const rows = csvText.split('\n').slice(1); // Skip header row
     return rows.map(row => {
-        const [s_id, cname1, cname2, cname3, genus, species, cultivar, x, y, plantsOnHornbake] = row.split(',');
-
-        // Combine names and format output
-        const combinedName = [cname1, cname2, cname3].filter(name => name.trim()).join(' ');
-        const displayName = `${combinedName} (${genus})`;
-
-        return { name: displayName, lat: parseFloat(y), lon: parseFloat(x) }; // Assuming x=longitude, y=latitude
+        const [name, lat, lon] = row.split(',');
+        return { name: name.trim(), lat: parseFloat(lat), lon: parseFloat(lon) };
     }).filter(place => !isNaN(place.lat) && !isNaN(place.lon));
 }

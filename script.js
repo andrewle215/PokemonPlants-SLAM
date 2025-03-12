@@ -10,12 +10,12 @@ window.onload = () => {
                 .then(csvText => {
                     const places = parseCSV(csvText);
                     places.forEach(place => {
-                        const latitude = 38.98150227270765;
-                        const longitude = -76.9447471533609;
+                        const latitude = 38.981367;
+                        const longitude = -76.944826;
                         // const latitude = place.lat;
                         // const longitude = place.lon;
-                        console.log(latitude);
-                        console.log(longitude);
+                        // console.log(latitude);
+                        // console.log(longitude);
                         // Add place name
                         const placeText = document.createElement('a-link');
                         placeText.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);

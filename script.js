@@ -63,8 +63,8 @@ window.onload = () => {
                     //     listItem.innerText = `${place.name} (${place.distance.toFixed(2)}m) ${place.lat},${place.lon}`;
                     //     plantList.appendChild(listItem);
                     // });
-                })
-                .catch(err => console.error('Error loading CSV:', err));
+                // })
+                // .catch(err => console.error('Error loading CSV:', err));
         },
         (error) => {
             console.error("Geolocation error:", error.message);

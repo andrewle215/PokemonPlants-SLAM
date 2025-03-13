@@ -1,104 +1,84 @@
-// window.onload = () => {
-//     const scene = document.querySelector('a-scene');
-
-//     // Get current user location
-//     navigator.geolocation.getCurrentPosition(
-//         function (position) {
-//             // Load locations from CSV
-//             fetch('Test.csv')
-//                 .then(response => response.text())
-//                 .then(csvText => {
-//                     const places = parseCSV(csvText);
-//                     places.forEach(place => {
-//                         const latitude = 38.9813497;
-//                         const longitude = -76.9447825;
-
-//                         // Add place name
-//                         const placeText = document.createElement('a-link');
-//                         placeText.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
-//                         placeText.setAttribute('title', place.name);
-//                         placeText.setAttribute('scale', '15 15 15');
-
-//                         placeText.addEventListener('loaded', () => {
-//                             window.dispatchEvent(new CustomEvent('gps-entity-place-loaded'));
-//                         });
-
-//                         scene.appendChild(placeText);
-//                     });
-//                 })
-//                 .catch(err => console.error('Error loading CSV', err));
-//         },
-//         err => console.error('Error in retrieving position', err),
-//         {
-//             enableHighAccuracy: true,
-//             maximumAge: 0,
-//             timeout: 27000,
-//         }
-//     );
-// };
-
-// function parseCSV(csvText) {
-//     const rows = csvText.split('\n').slice(1); // Skip header row
-//     return rows.map(row => {
-//         const [name, lat, lon] = row.split(',');
-//         return { name: name.trim(), lat: parseFloat(lat), lon: parseFloat(lon) };
-//     }).filter(place => !isNaN(place.lat) && !isNaN(place.lon));
-// }
-
-// OTHER CODE
-
 window.onload = () => {
     const scene = document.querySelector('a-scene');
+    const userLocation = document.getElementById('user-location');
+    const plantList = document.getElementById('plant-list');
 
-    // Get current user location
     navigator.geolocation.getCurrentPosition(
-        function (position) {
-            // Load locations from CSV
+        (position) => {
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
+            userLocation.textContent = `Lat: ${userLat.toFixed(6)}, Lon: ${userLon.toFixed(6)}`;
+            console.log("User Location:", userLat, userLon);
+
             fetch('ABG_Database_101124wSID_cleaned_112824_wHornbake.csv')
                 .then(response => response.text())
                 .then(csvText => {
+                    console.log("CSV Loaded Successfully!");
                     const places = parseCSV(csvText);
+                    console.log("Parsed Places:", places);
+
                     places.forEach(place => {
-                        const latitude = place.lat;
-                        const longitude = place.lon;
+                        // Add AR markers
+                        const placeMarker = document.createElement('a-sphere');
+                        placeMarker.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
+                        placeMarker.setAttribute('radius', '2');
+                        placeMarker.setAttribute('color', 'red');
 
-                        // Add place name
-                        const placeText = document.createElement('a-link');
-                        placeText.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
-                        placeText.setAttribute('title', place.name);
-                        placeText.setAttribute('scale', '15 15 15');
+                        const placeLabel = document.createElement('a-text');
+                        placeLabel.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
+                        placeLabel.setAttribute('value', place.name);
+                        placeLabel.setAttribute('scale', '10 10 10');
+                        placeLabel.setAttribute('align', 'center');
 
-                        placeText.addEventListener('loaded', () => {
-                            window.dispatchEvent(new CustomEvent('gps-entity-place-loaded'));
-                        });
+                        scene.appendChild(placeMarker);
+                        scene.appendChild(placeLabel);
 
-                        scene.appendChild(placeText);
+                        // Add to list in the UI
+                        const listItem = document.createElement('li');
+                        listItem.innerText = place.name;
+                        plantList.appendChild(listItem);
                     });
                 })
-                .catch(err => console.error('Error loading CSV', err));
+                .catch(err => console.error('Error loading CSV:', err));
         },
-        err => console.error('Error in retrieving position', err),
-        {
-            enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 27000,
-        }
+        (error) => {
+            console.error("Geolocation error:", error.message);
+            userLocation.textContent = "Location unavailable";
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 27000 }
     );
 };
 
 function parseCSV(csvText) {
     const rows = csvText.split('\n').slice(1); // Skip header row
-    return rows.map(row => {
-        const [s_id, cname1, cname2, cname3, genus, species, cultivar, x, y, plantsOnHornbake] = row.split(',');
 
-        // Combine names and format output
-        const combinedName = [cname1, cname2, cname3].filter(name => name.trim()).join(' ');
-        const displayName = `${combinedName} (${genus})`;
+    return rows
+        .map(row => {
+            const columns = row.split(',');
 
-        const lat = parseFloat(y);
-        const lon = parseFloat(x);
+            // Ensure row has enough columns
+            if (columns.length < 9) {
+                console.warn("Skipping malformed row:", row);
+                return null;
+            }
 
-        return !isNaN(lat) && !isNaN(lon) ? { name: displayName, lat, lon } : null;
-    }).filter(place => place !== null);
+            // Extract names and remove empty values
+            const names = [columns[1], columns[2], columns[3]]
+                .map(name => name ? name.trim() : "")
+                .filter(name => name.length > 0)
+                .join(" / "); // Join non-empty names with " / "
+
+            const lat = parseFloat(columns[8]); // y -> latitude
+            const lon = parseFloat(columns[7]); // x -> longitude
+
+            // Validate extracted data
+            if (!names || isNaN(lat) || isNaN(lon)) {
+                console.warn("Invalid data in row:", row);
+                return null;
+            }
+
+            return { name: names, lat, lon };
+        })
+        .filter(place => place !== null); // Remove invalid entries
 }
 

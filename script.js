@@ -33,19 +33,19 @@ window.onload = () => {
 
                     places.forEach(place => {
                         // Add AR markers
-                        const placeMarker = document.createElement('a-sphere');
+                        const placeMarker = document.createElement('a-entity');
                         placeMarker.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
-                        placeMarker.setAttribute('radius', '2');
-                        placeMarker.setAttribute('color', 'red');
+                        placeMarker.setAttribute('radius', '0.5');
+                        placeMarker.setAttribute('color', 'blue');
 
-                        const placeLabel = document.createElement('a-text');
-                        placeLabel.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
-                        placeLabel.setAttribute('value', place.name);
-                        placeLabel.setAttribute('scale', '10 10 10');
-                        placeLabel.setAttribute('align', 'center');
+                        // const placeLabel = document.createElement('a-text');
+                        // placeLabel.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
+                        // placeLabel.setAttribute('value', place.name);
+                        // placeLabel.setAttribute('scale', '10 10 10');
+                        // placeLabel.setAttribute('align', 'center');
 
                         scene.appendChild(placeMarker);
-                        scene.appendChild(placeLabel);
+                        // scene.appendChild(placeLabel);
 
                         // Add to list in UI
                         const listItem = document.createElement('li');

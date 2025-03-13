@@ -79,7 +79,7 @@ function parseCSV(csvText) {
             const lat = parseFloat(columns[8]); // y -> latitude
             const lon = parseFloat(columns[7]); // x -> longitude
 
-            return names && !isNaN(lat) && !isNaN(lon) ? { name: names, lat, lon } : null;
+            return name && !isNaN(lat) && !isNaN(lon) ? { name: name, lat:lat, lon:lon } : null;
         })
         .filter(place => place !== null);
 }

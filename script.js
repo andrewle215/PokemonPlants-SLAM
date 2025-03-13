@@ -46,7 +46,7 @@ window.onload = () => {
 
                         // Add to list in UI
                         const listItem = document.createElement('li');
-                        listItem.innerText = `${place.name} (${place.distance.toFixed(2)}m)`;
+                        listItem.innerText = `${place.name} (${place.distance.toFixed(2)}m) ${place.lat},${place.lon}`;
                         plantList.appendChild(listItem);
                     });
                 })

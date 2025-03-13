@@ -14,8 +14,19 @@ window.onload = () => {
                 .then(response => response.text())
                 .then(csvText => {
                     console.log("CSV Loaded Successfully!");
-                    const places = parseCSV(csvText);
-                    console.log("Parsed Places:", places);
+                    let places = parseCSV(csvText);
+
+                    // Filter & sort plants by distance
+                    places = places
+                        .map(place => ({
+                            ...place,
+                            distance: getDistance(userLat, userLon, place.lat, place.lon)
+                        }))
+                        .filter(place => place.distance <= 5) // Only within 5 meters
+                        .sort((a, b) => a.distance - b.distance) // Sort nearest first
+                        .slice(0, 5); // Pick the closest 5
+
+                    console.log("Nearest Plants:", places);
 
                     places.forEach(place => {
                         // Add AR markers
@@ -33,9 +44,9 @@ window.onload = () => {
                         scene.appendChild(placeMarker);
                         scene.appendChild(placeLabel);
 
-                        // Add to list in the UI
+                        // Add to list in UI
                         const listItem = document.createElement('li');
-                        listItem.innerText = place.name;
+                        listItem.innerText = `${place.name} (${place.distance.toFixed(2)}m)`;
                         plantList.appendChild(listItem);
                     });
                 })
@@ -49,6 +60,7 @@ window.onload = () => {
     );
 };
 
+// Parses CSV and extracts plant data
 function parseCSV(csvText) {
     const rows = csvText.split('\n').slice(1); // Skip header row
 
@@ -56,29 +68,34 @@ function parseCSV(csvText) {
         .map(row => {
             const columns = row.split(',');
 
-            // Ensure row has enough columns
-            if (columns.length < 9) {
-                console.warn("Skipping malformed row:", row);
-                return null;
-            }
+            if (columns.length < 9) return null;
 
-            // Extract names and remove empty values
-            const names = [columns[1], columns[2], columns[3]]
-                .map(name => name ? name.trim() : "")
-                .filter(name => name.length > 0)
-                .join(" / "); // Join non-empty names with " / "
+            // const names = [columns[1], columns[2], columns[3]]
+            //     .map(name => name ? name.trim() : "")
+            //     .filter(name => name.length > 0)
+            //     .join(" / ");
+            const name = columns[0]?.trim(); // s_id
 
             const lat = parseFloat(columns[8]); // y -> latitude
             const lon = parseFloat(columns[7]); // x -> longitude
 
-            // Validate extracted data
-            if (!names || isNaN(lat) || isNaN(lon)) {
-                console.warn("Invalid data in row:", row);
-                return null;
-            }
-
-            return { name: names, lat, lon };
+            return names && !isNaN(lat) && !isNaN(lon) ? { name: names, lat, lon } : null;
         })
-        .filter(place => place !== null); // Remove invalid entries
+        .filter(place => place !== null);
 }
 
+// Haversine formula to calculate distance in meters
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // Radius of Earth in meters
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in meters
+}

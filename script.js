@@ -9,46 +9,60 @@ window.onload = () => {
             const userLon = position.coords.longitude;
             userLocation.textContent = `Lat: ${userLat.toFixed(6)}, Lon: ${userLon.toFixed(6)}`;
             console.log("User Location:", userLat, userLon);
+            
+            const placeMarker = document.createElement('a-sphere');
+            placeMarker.setAttribute('gps-entity-place', `latitude: ${userLat}; longitude: ${userLon};`);
+            placeMarker.setAttribute('radius', '2');
+            placeMarker.setAttribute('color', 'red');
 
-            fetch('ABG_Database_101124wSID_cleaned_112824_wHornbake.csv')
-                .then(response => response.text())
-                .then(csvText => {
-                    console.log("CSV Loaded Successfully!");
-                    let places = parseCSV(csvText);
+            const placeLabel = document.createElement('a-text');
+            placeLabel.setAttribute('gps-entity-place', `latitude: ${userLat}; longitude: ${userLon};`);
+            placeLabel.setAttribute('value', "Current User");
+            placeLabel.setAttribute('scale', '10 10 10');
+            placeLabel.setAttribute('align', 'center');
+
+            scene.appendChild(placeMarker);
+            scene.appendChild(placeLabel);
+
+            // fetch('ABG_Database_101124wSID_cleaned_112824_wHornbake.csv')
+            //     .then(response => response.text())
+            //     .then(csvText => {
+            //         console.log("CSV Loaded Successfully!");
+                    // let places = parseCSV(csvText);
 
                     // Filter & sort plants by distance
-                    places = places
-                        .map(place => ({
-                            ...place,
-                            distance: getDistance(userLat, userLon, place.lat, place.lon)
-                        }))
-                        .filter(place => place.distance <= 5) // Only within 5 meters
-                        .sort((a, b) => a.distance - b.distance) // Sort nearest first
-                        .slice(0, 5); // Pick the closest 5
+                    // places = places
+                    //     .map(place => ({
+                    //         ...place,
+                    //         distance: getDistance(userLat, userLon, place.lat, place.lon)
+                    //     }))
+                    //     .filter(place => place.distance <= 5) // Only within 5 meters
+                    //     .sort((a, b) => a.distance - b.distance) // Sort nearest first
+                    //     .slice(0, 5); // Pick the closest 5
 
-                    console.log("Nearest Plants:", places);
+                    // console.log("Nearest Plants:", places);
 
-                    places.forEach(place => {
-                        // Add AR markers
-                        const placeMarker = document.createElement('a-sphere');
-                        placeMarker.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
-                        placeMarker.setAttribute('radius', '2');
-                        placeMarker.setAttribute('color', 'red');
+                    // places.forEach(place => {
+                    //     // Add AR markers
+                    //     const placeMarker = document.createElement('a-sphere');
+                    //     placeMarker.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
+                    //     placeMarker.setAttribute('radius', '2');
+                    //     placeMarker.setAttribute('color', 'red');
 
-                        const placeLabel = document.createElement('a-text');
-                        placeLabel.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
-                        placeLabel.setAttribute('value', place.name);
-                        placeLabel.setAttribute('scale', '10 10 10');
-                        placeLabel.setAttribute('align', 'center');
+                    //     const placeLabel = document.createElement('a-text');
+                    //     placeLabel.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
+                    //     placeLabel.setAttribute('value', place.name);
+                    //     placeLabel.setAttribute('scale', '10 10 10');
+                    //     placeLabel.setAttribute('align', 'center');
 
-                        scene.appendChild(placeMarker);
-                        scene.appendChild(placeLabel);
+                    //     scene.appendChild(placeMarker);
+                    //     scene.appendChild(placeLabel);
 
-                        // Add to list in UI
-                        const listItem = document.createElement('li');
-                        listItem.innerText = `${place.name} (${place.distance.toFixed(2)}m) ${place.lat},${place.lon}`;
-                        plantList.appendChild(listItem);
-                    });
+                    //     // Add to list in UI
+                    //     const listItem = document.createElement('li');
+                    //     listItem.innerText = `${place.name} (${place.distance.toFixed(2)}m) ${place.lat},${place.lon}`;
+                    //     plantList.appendChild(listItem);
+                    // });
                 })
                 .catch(err => console.error('Error loading CSV:', err));
         },

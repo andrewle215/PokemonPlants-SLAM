@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset='utf-8'>
-    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>GeoAR.js demo</title>
-    <script src='https://aframe.io/releases/0.9.2/aframe.min.js'></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoAR.js Demo</title>
+    <script src="https://aframe.io/releases/0.9.2/aframe.min.js"></script>
     <script src="https://raw.githack.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.min.js"></script>
     <script>
         THREEx.ArToolkitContext.baseURL = 'https://raw.githack.com/jeromeetienne/ar.js/master/three.js/'
@@ -16,35 +16,50 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            height: 100vh;
+        }
+        #container {
+            display: flex;
+            height: 100%;
         }
         #scene-container {
-            width: 100vw;
-            height: 70vh;
+            flex: 7;
+            background: black;
         }
         #info-container {
-            width: 100vw;
-            height: 30vh;
+            flex: 3;
             background: white;
-            padding: 20px;
-            box-sizing: border-box;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        #user-location {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        #plant-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
             overflow-y: auto;
-            position: absolute;
-            bottom: 0;
-            left: 0;
         }
     </style>
 </head>
 <body>
-    <div id="scene-container">
-        <a-scene vr-mode-ui='enabled: false' embedded arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth:1280; displayHeight:960; debugUIEnabled: false;'>
-            <a-camera gps-camera="minDistance: 40;" rotation-reader></a-camera>
-        </a-scene>
-    </div>
-    <div id="info-container">
-        <h2>Current Location</h2>
-        <p id="user-location">Fetching location...</p>
-        <h2>Nearby Plants</h2>
-        <ul id="plant-list"></ul>
+    <div id="container">
+        <!-- A-Frame Scene (70%) -->
+        <div id="scene-container">
+            <a-scene embedded vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false;">
+                <a-camera gps-camera="minDistance: 40;" rotation-reader></a-camera>
+            </a-scene>
+        </div>
+        <!-- Info Panel (30%) -->
+        <div id="info-container">
+            <p id="user-location">Fetching data...</p>
+            <ul id="plant-list"></ul>
+        </div>
     </div>
 </body>
 </html>

@@ -1,29 +1,29 @@
-AFRAME.registerComponent('lock-height', {
-    tick: function () {
-        // Get the current position and force y to 0 (ground level)
-        const pos = this.el.getAttribute('position');
-        pos.y = 0;
-        this.el.setAttribute('position', pos);
-    }
-});
+// AFRAME.registerComponent('lock-height', {
+//     tick: function () {
+//         // Get the current position and force y to 0 (ground level)
+//         const pos = this.el.getAttribute('position');
+//         pos.y = 0;
+//         this.el.setAttribute('position', pos);
+//     }
+// });
 
-places.forEach(place => {
-    // Add AR marker
-    const placeMarker = document.createElement('a-entity');
-    placeMarker.setAttribute('geometry', 'primitive: sphere; radius: 0.5');
-    placeMarker.setAttribute('material', 'color: blue');
-    placeMarker.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
+// places.forEach(place => {
+//     // Add AR marker
+//     const placeMarker = document.createElement('a-entity');
+//     placeMarker.setAttribute('geometry', 'primitive: sphere; radius: 0.5');
+//     placeMarker.setAttribute('material', 'color: blue');
+//     placeMarker.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
 
-    // Lock height so the dot stays at ground level
-    placeMarker.setAttribute('lock-height', '');
+//     // Lock height so the dot stays at ground level
+//     placeMarker.setAttribute('lock-height', '');
 
-    scene.appendChild(placeMarker);
+//     scene.appendChild(placeMarker);
 
-    // Add to list in UI
-    const listItem = document.createElement('li');
-    listItem.innerText = `${place.name} (${place.distance.toFixed(2)}m) ${place.lat},${place.lon}`;
-    plantList.appendChild(listItem);
-});
+//     // Add to list in UI
+//     const listItem = document.createElement('li');
+//     listItem.innerText = `${place.name} (${place.distance.toFixed(2)}m) ${place.lat},${place.lon}`;
+//     plantList.appendChild(listItem);
+// });
 
 
 

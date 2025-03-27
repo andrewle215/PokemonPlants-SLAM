@@ -132,7 +132,7 @@ window.onload = () => {
     }
 
     const watchId = navigator.geolocation.watchPosition(
-        // handleSmoothPosition,
+        handleSmoothPosition,
         (error) => {
             console.error("Geolocation error:", error.message);
             userLocation.textContent = "Location unavailable";

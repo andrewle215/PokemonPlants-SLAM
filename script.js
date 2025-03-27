@@ -5,66 +5,122 @@ window.onload = () => {
     const camera = document.querySelector("[gps-new-camera]");
     const plantList = document.getElementById('plant-list');
 
-    if (!navigator.geolocation) {
-        userLocation.textContent = "Geolocation is not supported by your browser.";
-        return;
-    }
 
-    camera.addEventListener("gps-camera-update-position", (e) => {
-        if (!e.detail.position) {
-            console.warn("No position data received.");
-            return;
-        }
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
+            userLocation.textContent = `Lat: ${userLat.toFixed(6)}, Lon: ${userLon.toFixed(6)}`;
+            console.log("User Location:", userLat, userLon);
+            
+            const userDot = document.getElementById('user-dot');
+            userDot.setAttribute('gps-entity-place', `latitude: ${userLat}; longitude: ${userLon};`);
+
+            fetch('ABG_Database_101124wSID_cleaned_112824_wHornbake.csv')
+                .then(response => response.text())
+                .then(csvText => {
+                    console.log("CSV Loaded Successfully!");
+                    let places = parseCSV(csvText);
+
+                    // Filter & sort plants by distance
+                    places = places
+                        .map(place => ({
+                            ...place,
+                            distance: getDistance(userLat, userLon, place.lat, place.lon)
+                        }))
+                        .filter(place => place.distance <= 10) // Only within 5 meters
+                        .sort((a, b) => a.distance - b.distance) // Sort nearest first
+                        .slice(0, 5); // Pick the closest 5
+
+                    console.log("Nearest Plants:", places);
+
+                    places.forEach(place => {
+                        // Add AR markers
+                        const placeMarker = document.createElement('a-entity');
+                        placeMarker.setAttribute('geometry', 'primitive: sphere; radius: 0.5');
+                        placeMarker.setAttribute('material', 'color: blue');
+                        placeMarker.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
+
+
+                        scene.appendChild(placeMarker);
+                        // scene.appendChild(placeLabel);
+
+                        // Add to list in UI
+                        const listItem = document.createElement('li');
+                        listItem.innerText = `${place.name} (${place.distance.toFixed(2)}m) ${place.lat},${place.lon}`;
+                        plantList.appendChild(listItem);
+                    });
+                })
+                .catch(err => console.error('Error loading CSV:', err));
+        },
+        (error) => {
+            console.error("Geolocation error:", error.message);
+            userLocation.textContent = "Location unavailable";
+        },
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 27000 }
+    );
+
+
+    // if (!navigator.geolocation) {
+    //     userLocation.textContent = "Geolocation is not supported by your browser.";
+    //     return;
+    // }
+
+    // camera.addEventListener("gps-camera-update-position", (e) => {
+    //     if (!e.detail.position) {
+    //         console.warn("No position data received.");
+    //         return;
+    //     }
         
-        const userLat = e.detail.position.latitude;
-        const userLon = e.detail.position.longitude;
-        console.log(`User Location: ${userLat}, ${userLon}`);
-        userLocation.textContent = `Lat: ${userLat}, Lon: ${userLon}`;
+    //     const userLat = e.detail.position.latitude;
+    //     const userLon = e.detail.position.longitude;
+    //     console.log(`User Location: ${userLat}, ${userLon}`);
+    //     userLocation.textContent = `Lat: ${userLat}, Lon: ${userLon}`;
 
-        if (!userMarkerAdded) {
-            const userMarker = document.createElement("a-box");
-            userMarker.setAttribute("scale", "1 1 1");
-            userMarker.setAttribute("material", "color: red");
-            userMarker.setAttribute("gps-new-entity-place", `latitude: ${userLat}; longitude: ${userLon}`);
-            scene.appendChild(userMarker);
-            userMarkerAdded = true;
-        }
+    //     if (!userMarkerAdded) {
+    //         const userMarker = document.createElement("a-box");
+    //         userMarker.setAttribute("scale", "1 1 1");
+    //         userMarker.setAttribute("material", "color: red");
+    //         userMarker.setAttribute("gps-new-entity-place", `latitude: ${userLat}; longitude: ${userLon}`);
+    //         scene.appendChild(userMarker);
+    //         userMarkerAdded = true;
+    //     }
 
-        fetch("ABG_Database_101124wSID_cleaned_112824_wHornbake.csv")
-            .then(response => {
-                if (!response.ok) throw new Error("Failed to load CSV file.");
-                return response.text();
-            })
-            .then(csvText => {
-                console.log("CSV Loaded Successfully!");
-                let plants = parseCSV(csvText);
+    //     fetch("ABG_Database_101124wSID_cleaned_112824_wHornbake.csv")
+    //         .then(response => {
+    //             if (!response.ok) throw new Error("Failed to load CSV file.");
+    //             return response.text();
+    //         })
+    //         .then(csvText => {
+    //             console.log("CSV Loaded Successfully!");
+    //             let plants = parseCSV(csvText);
                 
-                plants = plants
-                    .map(plant => ({
-                        ...plant,
-                        distance: getDistance(userLat, userLon, plant.lat, plant.lon)
-                    }))
-                    .filter(plant => plant.distance <= 10)
-                    .sort((a, b) => a.distance - b.distance)
-                    .slice(0, 10);
+    //             plants = plants
+    //                 .map(plant => ({
+    //                     ...plant,
+    //                     distance: getDistance(userLat, userLon, plant.lat, plant.lon)
+    //                 }))
+    //                 .filter(plant => plant.distance <= 10)
+    //                 .sort((a, b) => a.distance - b.distance)
+    //                 .slice(0, 10);
 
-                console.log("Nearest Plants:", plants);
+    //             console.log("Nearest Plants:", plants);
 
-                plantList.innerHTML = "";
-                plants.forEach(plant => {
-                    const plantMarker = document.createElement("a-box");
-                    plantMarker.setAttribute("scale", "1 1 1");
-                    plantMarker.setAttribute("material", "color: blue");
-                    plantMarker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
-                    scene.appendChild(plantMarker);
+    //             plantList.innerHTML = "";
+    //             plants.forEach(plant => {
+    //                 const plantMarker = document.createElement("a-box");
+    //                 plantMarker.setAttribute("scale", "1 1 1");
+    //                 plantMarker.setAttribute("material", "color: blue");
+    //                 plantMarker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
+    //                 scene.appendChild(plantMarker);
                     
-                    const listItem = document.createElement('li');
-                    listItem.innerText = `${plant.cname1 || "N/A"} ${plant.cname2 || ""} ${plant.cname3 || ""} - Genus: ${plant.genus || "N/A"}, Species: ${plant.species || "N/A"}, Cultivar: ${plant.cultivar || "N/A"} (${plant.distance.toFixed(2)}m)`;
-                    plantList.appendChild(listItem);
-                });
-            })
-            .catch(err => console.error("Error loading CSV:", err));
-    });
+    //                 const listItem = document.createElement('li');
+    //                 listItem.innerText = `${plant.cname1 || "N/A"} ${plant.cname2 || ""} ${plant.cname3 || ""} - Genus: ${plant.genus || "N/A"}, Species: ${plant.species || "N/A"}, Cultivar: ${plant.cultivar || "N/A"} (${plant.distance.toFixed(2)}m)`;
+    //                 plantList.appendChild(listItem);
+    //             });
+    //         })
+    //         .catch(err => console.error("Error loading CSV:", err));
+    // });
 };
 // Function to parse CSV text into an array of plant objects
 function parseCSV(csvText) {

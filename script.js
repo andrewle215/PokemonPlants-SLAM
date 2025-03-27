@@ -50,29 +50,10 @@ window.onload = () => {
 
                 console.log("Nearest Plants:", plants);
 
-
-
-
-
-
-                
-                const testMarker = document.createElement("a-box");
-                testMarker.setAttribute("scale", "1 1 1");
-                testMarker.setAttribute("material", "color: yellow");
-                testMarker.setAttribute("position", "0 1 -5"); // 5 meters in front of the camera
-                scene.appendChild(testMarker);
-
-
-
-
-
-                
-
-
-
                 plantList.innerHTML = "";
                 plants.forEach(plant => {
-                    const relativePosition = gpsToRelativePosition(e.detail.position, plant);
+                    // Calculate relative position based on camera's rotation
+                    const relativePosition = calculateRelativePosition(camera, plant);
 
                     const plantMarker = document.createElement("a-box");
                     plantMarker.setAttribute("scale", "1 1 1");
@@ -133,18 +114,18 @@ function getDistance(lat1, lon1, lat2, lon2) {
     return R * c; // Distance in meters
 }
 
-// Function to calculate relative position from user to plant
-function gpsToRelativePosition(userPosition, plant) {
-    const earthRadius = 6371000; // Earth's radius in meters
+// Function to calculate relative position from camera to plant
+function calculateRelativePosition(camera, plant) {
+    // Define relative distance (e.g., 5 meters in front of the camera)
+    const distance = 5; // Adjust as needed based on your scene scale
 
-    const userLat = userPosition.latitude;
-    const userLon = userPosition.longitude;
-    const plantLat = plant.lat;
-    const plantLon = plant.lon;
+    // Convert camera's rotation to radians
+    const cameraRotation = camera.getAttribute("rotation");
+    const cameraAngle = cameraRotation.y * Math.PI / 180; // Convert to radians
 
-    // Convert lat/lon differences to meters
-    const dLat = (plantLat - userLat) * (Math.PI / 180) * earthRadius;
-    const dLon = (plantLon - userLon) * (Math.PI / 180) * earthRadius * Math.cos(userLat * Math.PI / 180);
+    // Calculate relative position based on camera's orientation
+    const relativeX = -distance * Math.sin(cameraAngle);
+    const relativeZ = -distance * Math.cos(cameraAngle);
 
-    return { x: dLon, y: 0, z: -dLat }; // Invert z to align with A-Frame's coordinate system
+    return { x: relativeX, y: 0, z: relativeZ };
 }

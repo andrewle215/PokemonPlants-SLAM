@@ -3,40 +3,28 @@ window.onload = () => {
     const userLocation = document.getElementById('user-location');
     const plantList = document.getElementById('plant-list');
 
-    // Smoothed position variables
     let smoothedLat = 0;
     let smoothedLon = 0;
-
-    // Previous position for heading calculation
     let prevLat = 0;
     let prevLon = 0;
 
-    // Function to handle smooth position updates
     function handleSmoothPosition(position) {
         const userLat = position.coords.latitude;
         const userLon = position.coords.longitude;
 
-        // Smooth position update logic (e.g., simple moving average)
         smoothedLat = smoothedLat * 0.9 + userLat * 0.1;
         smoothedLon = smoothedLon * 0.9 + userLon * 0.1;
 
-        // Calculate heading based on smoothed position
         const heading = calculateHeading(prevLat, prevLon, smoothedLat, smoothedLon);
-
-        // Update AR markers with smoothed position and heading
         updateARMarkers(smoothedLat, smoothedLon, heading);
 
-        // Update UI with user's current location
         userLocation.textContent = `Lat: ${smoothedLat.toFixed(6)}, Lon: ${smoothedLon.toFixed(6)}`;
 
-        // Update previous position for next calculation
         prevLat = userLat;
         prevLon = userLon;
     }
 
-    // Function to calculate heading (bearing) between two GPS points
     function calculateHeading(lat1, lon1, lat2, lon2) {
-        // Calculate bearing using trigonometry
         const φ1 = (lat1 * Math.PI) / 180;
         const φ2 = (lat2 * Math.PI) / 180;
         const Δλ = ((lon2 - lon1) * Math.PI) / 180;
@@ -44,55 +32,108 @@ window.onload = () => {
         const y = Math.sin(Δλ) * Math.cos(φ2);
         const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
         let bearing = Math.atan2(y, x);
-        bearing = (bearing * 180) / Math.PI; // Convert radians to degrees
+        bearing = (bearing * 180) / Math.PI;
 
-        return (bearing + 360) % 360; // Normalize to 0-360 degrees
+        return (bearing + 360) % 360;
     }
 
-    // Function to update AR markers with smoothed position and heading
     function updateARMarkers(lat, lon, heading) {
-        // Update AR markers in your scene based on smoothed position and heading
         const userDot = document.getElementById('user-dot');
         userDot.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lon};`);
         userDot.setAttribute('rotation', `0 ${heading} 0`);
 
-        // Example: Clear previous plant markers (optional)
-        plantList.innerHTML = "";
+        fetch('ABG_Database_101124wSID_cleaned_112824_wHornbake.csv')
+            .then(response => response.text())
+            .then(csvText => {
+                let places = parseCSV(csvText);
 
-        // Example: Display some placeholder plants based on user's location
-        const plants = generateDummyPlants(lat, lon); // Replace with actual fetch logic
+                places = places
+                    .map(place => ({
+                        ...place,
+                        distance: getDistance(lat, lon, place.lat, place.lon)
+                    }))
+                    .filter(place => place.distance <= 10)
+                    .sort((a, b) => a.distance - b.distance)
+                    .slice(0, 10);
 
-        plants.forEach((plant, index) => {
-            const plantMarker = document.createElement('a-entity');
-            plantMarker.setAttribute('geometry', 'primitive: sphere; radius: 0.1');
-            plantMarker.setAttribute('material', 'color: green');
-            plantMarker.setAttribute('gps-entity-place', `latitude: ${plant.lat}; longitude: ${plant.lon};`);
-            scene.appendChild(plantMarker);
+                console.log("Nearest Plants:", places);
 
-            // Update plant list in UI
-            const listItem = document.createElement('li');
-            listItem.innerText = `${plant.name} - Distance: ${plant.distance.toFixed(2)}m`;
-            plantList.appendChild(listItem);
-        });
+                scene.querySelectorAll('.plant-marker').forEach(marker => marker.parentNode.removeChild(marker));
+
+                places.forEach(place => {
+                    const placeMarker = document.createElement('a-entity');
+                    placeMarker.setAttribute('geometry', 'primitive: sphere; radius: 0.1');
+                    placeMarker.setAttribute('material', 'color: blue');
+                    placeMarker.setAttribute('gps-entity-place', `latitude: ${place.lat}; longitude: ${place.lon};`);
+                    placeMarker.setAttribute('rotation', `0 ${heading} 0`);
+                    placeMarker.classList.add('plant-marker');
+
+                    placeMarker.addEventListener('click', () => {
+                        alert(`Plant Details:
+                            s_id: ${place.s_id}
+                            cname1: ${place.cname1 || "N/A"}
+                            cname2: ${place.cname2 || "N/A"}
+                            cname3: ${place.cname3 || "N/A"}
+                            Genus: ${place.genus || "N/A"}
+                            Species: ${place.species || "N/A"}
+                            Cultivar: ${place.cultivar || "N/A"}`);
+                    });
+
+                    scene.appendChild(placeMarker);
+
+                    const listItem = document.createElement('li');
+                    listItem.innerText = `${place.cname1 || "N/A"} ${place.cname2 || "N/A"} ${place.cname3 || "N/A"} Genus: ${place.genus || "N/A"} Species: ${place.species || "N/A"} Cultivar: ${place.cultivar || "N/A"} (${place.distance.toFixed(2)}m) ${place.lat},${place.lon}`;
+                    plantList.appendChild(listItem);
+                });
+            })
+            .catch(err => console.error('Error loading CSV:', err));
     }
 
-    // Example function to generate dummy plants for testing
-    function generateDummyPlants(userLat, userLon) {
-        const dummyPlants = [
-            { name: 'Plant A', lat: userLat + 0.0005, lon: userLon + 0.0005, distance: 50 },
-            { name: 'Plant B', lat: userLat - 0.0005, lon: userLon - 0.0005, distance: 70 },
-            { name: 'Plant C', lat: userLat + 0.001, lon: userLon - 0.001, distance: 100 }
-            // Add more dummy data as needed
-        ];
-        return dummyPlants;
+    function parseCSV(csvText) {
+        const rows = csvText.split('\n').slice(1);
+
+        return rows
+            .map(row => {
+                const columns = row.split(',');
+
+                while (columns.length < 9) {
+                    columns.push("");
+                }
+
+                return {
+                    s_id: (columns[0] || "").trim(),
+                    cname1: (columns[1] || "").trim(),
+                    cname2: (columns[2] || "").trim(),
+                    cname3: (columns[3] || "").trim(),
+                    genus: (columns[4] || "").trim(),
+                    species: (columns[5] || "").trim(),
+                    cultivar: (columns[6] || "").trim(),
+                    lon: parseFloat(columns[7]) || 0,
+                    lat: parseFloat(columns[8]) || 0
+                };
+            })
+            .filter(place => place.s_id && place.lat !== 0 && place.lon !== 0);
     }
 
-    // Example usage with watchPosition
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const φ1 = (lat1 * Math.PI) / 180;
+        const φ2 = (lat2 * Math.PI) / 180;
+        const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+        const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
     const watchId = navigator.geolocation.watchPosition(
         handleSmoothPosition,
         (error) => {
             console.error("Geolocation error:", error.message);
-            // Handle error gracefully
             userLocation.textContent = "Location unavailable";
         },
         {

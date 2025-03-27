@@ -1,126 +1,104 @@
 window.onload = () => {
-    let userMarkerAdded = false;
-    const scene = document.querySelector("a-scene");
+    const scene = document.querySelector('a-scene');
     const userLocation = document.getElementById('user-location');
-    const camera = document.querySelector("[gps-new-camera]");
     const plantList = document.getElementById('plant-list');
 
-    if (!navigator.geolocation) {
-        userLocation.textContent = "Geolocation is not supported by your browser.";
-        return;
+    // Smoothed position variables
+    let smoothedLat = 0;
+    let smoothedLon = 0;
+
+    // Previous position for heading calculation
+    let prevLat = 0;
+    let prevLon = 0;
+
+    // Function to handle smooth position updates
+    function handleSmoothPosition(position) {
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+
+        // Smooth position update logic (e.g., simple moving average)
+        smoothedLat = smoothedLat * 0.9 + userLat * 0.1;
+        smoothedLon = smoothedLon * 0.9 + userLon * 0.1;
+
+        // Calculate heading based on smoothed position
+        const heading = calculateHeading(prevLat, prevLon, smoothedLat, smoothedLon);
+
+        // Update AR markers with smoothed position and heading
+        updateARMarkers(smoothedLat, smoothedLon, heading);
+
+        // Update UI with user's current location
+        userLocation.textContent = `Lat: ${smoothedLat.toFixed(6)}, Lon: ${smoothedLon.toFixed(6)}`;
+
+        // Update previous position for next calculation
+        prevLat = userLat;
+        prevLon = userLon;
     }
 
-    camera.addEventListener("gps-camera-update-position", (e) => {
-        if (!e.detail.position) {
-            console.warn("No position data received.");
-            return;
+    // Function to calculate heading (bearing) between two GPS points
+    function calculateHeading(lat1, lon1, lat2, lon2) {
+        // Calculate bearing using trigonometry
+        const φ1 = (lat1 * Math.PI) / 180;
+        const φ2 = (lat2 * Math.PI) / 180;
+        const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+        const y = Math.sin(Δλ) * Math.cos(φ2);
+        const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+        let bearing = Math.atan2(y, x);
+        bearing = (bearing * 180) / Math.PI; // Convert radians to degrees
+
+        return (bearing + 360) % 360; // Normalize to 0-360 degrees
+    }
+
+    // Function to update AR markers with smoothed position and heading
+    function updateARMarkers(lat, lon, heading) {
+        // Update AR markers in your scene based on smoothed position and heading
+        const userDot = document.getElementById('user-dot');
+        userDot.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lon};`);
+        userDot.setAttribute('rotation', `0 ${heading} 0`);
+
+        // Example: Clear previous plant markers (optional)
+        plantList.innerHTML = "";
+
+        // Example: Display some placeholder plants based on user's location
+        const plants = generateDummyPlants(lat, lon); // Replace with actual fetch logic
+
+        plants.forEach((plant, index) => {
+            const plantMarker = document.createElement('a-entity');
+            plantMarker.setAttribute('geometry', 'primitive: sphere; radius: 0.1');
+            plantMarker.setAttribute('material', 'color: green');
+            plantMarker.setAttribute('gps-entity-place', `latitude: ${plant.lat}; longitude: ${plant.lon};`);
+            scene.appendChild(plantMarker);
+
+            // Update plant list in UI
+            const listItem = document.createElement('li');
+            listItem.innerText = `${plant.name} - Distance: ${plant.distance.toFixed(2)}m`;
+            plantList.appendChild(listItem);
+        });
+    }
+
+    // Example function to generate dummy plants for testing
+    function generateDummyPlants(userLat, userLon) {
+        const dummyPlants = [
+            { name: 'Plant A', lat: userLat + 0.0005, lon: userLon + 0.0005, distance: 50 },
+            { name: 'Plant B', lat: userLat - 0.0005, lon: userLon - 0.0005, distance: 70 },
+            { name: 'Plant C', lat: userLat + 0.001, lon: userLon - 0.001, distance: 100 }
+            // Add more dummy data as needed
+        ];
+        return dummyPlants;
+    }
+
+    // Example usage with watchPosition
+    const watchId = navigator.geolocation.watchPosition(
+        handleSmoothPosition,
+        (error) => {
+            console.error("Geolocation error:", error.message);
+            // Handle error gracefully
+            userLocation.textContent = "Location unavailable";
+        },
+        {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 27000
         }
-        
-        const userLat = e.detail.position.latitude;
-        const userLon = e.detail.position.longitude;
-        console.log(`User Location: ${userLat}, ${userLon}`);
-        userLocation.textContent = `Lat: ${userLat.toFixed(6)}, Lon: ${userLon.toFixed(6)}`;
-
-        if (!userMarkerAdded) {
-            // Create a red marker for the user's position
-            const userMarker = document.createElement("a-box");
-            userMarker.setAttribute("scale", "1 1 1");
-            userMarker.setAttribute("material", "color: red");
-            userMarker.setAttribute("gps-new-entity-place", `latitude: ${userLat}; longitude: ${userLon}`);
-            scene.appendChild(userMarker);
-            userMarkerAdded = true;
-        }
-
-        fetch("ABG_Database_101124wSID_cleaned_112824_wHornbake.csv")
-            .then(response => {
-                if (!response.ok) throw new Error("Failed to load CSV file.");
-                return response.text();
-            })
-            .then(csvText => {
-                console.log("CSV Loaded Successfully!");
-                let plants = parseCSV(csvText);
-                
-                // Filter plants within a certain distance (adjust as needed)
-                plants = plants
-                    .map(plant => ({
-                        ...plant,
-                        distance: getDistance(userLat, userLon, plant.lat, plant.lon)
-                    }))
-                    .filter(plant => plant.distance <= 5) // Adjust distance threshold as needed
-                    .sort((a, b) => a.distance - b.distance)
-                    .slice(0, 10);
-
-                console.log("Nearest Plants:", plants);
-
-                // Add a yellow test marker in front of the camera
-                const testMarker = document.createElement("a-box");
-                testMarker.setAttribute("scale", "1 1 1");
-                testMarker.setAttribute("material", "color: yellow");
-                testMarker.setAttribute("position", "0 1 -5"); // Adjust position relative to camera
-                scene.appendChild(testMarker);
-
-                // Clear and update plant list
-                plantList.innerHTML = "";
-                plants.forEach(plant => {
-                    // Calculate relative position from user to plant
-                    const relativePosition = gpsToRelativePosition(e.detail.position, plant);
-
-                    // Create a blue marker for each plant
-                    const plantMarker = document.createElement("a-box");
-                    plantMarker.setAttribute("scale", "1 1 1");
-                    plantMarker.setAttribute("material", "color: blue");
-                    plantMarker.setAttribute("position", `${relativePosition.x} ${relativePosition.y} ${relativePosition.z}`);
-                    scene.appendChild(plantMarker);
-                    
-                    // Add plant details to the list
-                    const listItem = document.createElement('li');
-                    listItem.innerText = `${plant.cname1 || "N/A"} ${plant.cname2 || ""} ${plant.cname3 || ""} - Genus: ${plant.genus || "N/A"}, Species: ${plant.species || "N/A"}, Cultivar: ${plant.cultivar || "N/A"} (${plant.distance.toFixed(2)}m)`;
-                    plantList.appendChild(listItem);
-                });
-            })
-            .catch(err => console.error("Error loading CSV:", err));
-    });
+    );
 };
-// Function to parse CSV text into an array of plant objects
-function parseCSV(csvText) {
-    const rows = csvText.split("\n").slice(1); // Skip header row
-
-    return rows
-        .map(row => {
-            const columns = row.split(",");
-
-            // Handle missing columns by concatenating empty strings
-            while (columns.length < 9) {
-                columns.push(""); // Add empty strings for missing cells
-            }
-
-            return {
-                s_id: columns[0]?.trim(),
-                cname1: columns[1]?.trim() || "Unknown",
-                cname2: columns[2]?.trim() || "",
-                cname3: columns[3]?.trim() || "",
-                genus: columns[4]?.trim() || "Unknown",
-                species: columns[5]?.trim() || "",
-                cultivar: columns[6]?.trim() || "",
-                lon: parseFloat(columns[7]) || 0, // Default to 0 if missing
-                lat: parseFloat(columns[8]) || 0  // Default to 0 if missing
-            };
-        })
-        .filter(plant => plant.s_id && plant.lat !== 0 && plant.lon !== 0); // Remove invalid entries
-}
-
-// Function to calculate distance between two GPS points (Haversine formula)
-function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // Earth's radius in meters
-    const φ1 = (lat1 * Math.PI) / 180;
-    const φ2 = (lat2 * Math.PI) / 180;
-    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in meters
-}

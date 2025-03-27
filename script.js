@@ -41,7 +41,7 @@ window.onload = () => {
         userDot.setAttribute('gps-entity-place', `latitude: ${lat}; longitude: ${lon};`);
         userDot.setAttribute('rotation', `0 ${heading} 0`);
 
-        fetch('ABG_Database_101124wSID_cleaned_112824_wHornbake.csv')
+        fetch('./ABG_Database_101124wSID_cleaned_112824_wHornbake.csv')
             .then(response => response.text())
             .then(csvText => {
                 let places = parseCSV(csvText);

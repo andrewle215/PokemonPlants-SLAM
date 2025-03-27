@@ -44,11 +44,31 @@ window.onload = () => {
                         ...plant,
                         distance: getDistance(userLat, userLon, plant.lat, plant.lon)
                     }))
-                    .filter(plant => plant.distance <= 10)
+                    .filter(plant => plant.distance <= 5)
                     .sort((a, b) => a.distance - b.distance)
                     .slice(0, 10);
 
                 console.log("Nearest Plants:", plants);
+
+
+
+
+
+
+                
+                const testMarker = document.createElement("a-box");
+                testMarker.setAttribute("scale", "1 1 1");
+                testMarker.setAttribute("material", "color: yellow");
+                testMarker.setAttribute("position", "0 1 -5"); // 5 meters in front of the camera
+                scene.appendChild(testMarker);
+
+
+
+
+
+                
+
+
 
                 plantList.innerHTML = "";
                 plants.forEach(plant => {

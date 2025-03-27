@@ -7,6 +7,7 @@ window.onload = () => {
     let smoothedLon = 0;
     let prevLat = 0;
     let prevLon = 0;
+    let prevHeading = 0;
 
     function handleSmoothPosition(position) {
         const userLat = position.coords.latitude;
@@ -16,12 +17,10 @@ window.onload = () => {
         smoothedLon = smoothedLon * 0.9 + userLon * 0.1;
 
         const heading = calculateHeading(prevLat, prevLon, smoothedLat, smoothedLon);
+        prevLat = smoothedLat;
+        prevLon = smoothedLon;
+
         updateARMarkers(smoothedLat, smoothedLon, heading);
-
-        userLocation.textContent = `Lat: ${smoothedLat.toFixed(6)}, Lon: ${smoothedLon.toFixed(6)}`;
-
-        prevLat = userLat;
-        prevLon = userLon;
     }
 
     function calculateHeading(lat1, lon1, lat2, lon2) {
@@ -58,8 +57,10 @@ window.onload = () => {
 
                 console.log("Nearest Plants:", places);
 
+                // Remove existing markers
                 scene.querySelectorAll('.plant-marker').forEach(marker => marker.parentNode.removeChild(marker));
 
+                // Add new markers
                 places.forEach(place => {
                     const placeMarker = document.createElement('a-entity');
                     placeMarker.setAttribute('geometry', 'primitive: sphere; radius: 0.1');

@@ -22,6 +22,7 @@ window.onload = () => {
         userLocation.textContent = `Lat: ${userLat.toFixed(6)}, Lon: ${userLon.toFixed(6)}`;
 
         if (!userMarkerAdded) {
+            // Create a red marker for the user's position
             const userMarker = document.createElement("a-box");
             userMarker.setAttribute("scale", "1 1 1");
             userMarker.setAttribute("material", "color: red");
@@ -39,28 +40,39 @@ window.onload = () => {
                 console.log("CSV Loaded Successfully!");
                 let plants = parseCSV(csvText);
                 
+                // Filter plants within a certain distance (adjust as needed)
                 plants = plants
                     .map(plant => ({
                         ...plant,
                         distance: getDistance(userLat, userLon, plant.lat, plant.lon)
                     }))
-                    .filter(plant => plant.distance <= 5)
+                    .filter(plant => plant.distance <= 5) // Adjust distance threshold as needed
                     .sort((a, b) => a.distance - b.distance)
                     .slice(0, 10);
 
                 console.log("Nearest Plants:", plants);
 
+                // Add a yellow test marker in front of the camera
+                const testMarker = document.createElement("a-box");
+                testMarker.setAttribute("scale", "1 1 1");
+                testMarker.setAttribute("material", "color: yellow");
+                testMarker.setAttribute("position", "0 1 -5"); // Adjust position relative to camera
+                scene.appendChild(testMarker);
+
+                // Clear and update plant list
                 plantList.innerHTML = "";
                 plants.forEach(plant => {
-                    // Calculate relative position based on camera's rotation
-                    const relativePosition = calculateRelativePosition(camera, plant);
+                    // Calculate relative position from user to plant
+                    const relativePosition = gpsToRelativePosition(e.detail.position, plant);
 
+                    // Create a blue marker for each plant
                     const plantMarker = document.createElement("a-box");
                     plantMarker.setAttribute("scale", "1 1 1");
                     plantMarker.setAttribute("material", "color: blue");
                     plantMarker.setAttribute("position", `${relativePosition.x} ${relativePosition.y} ${relativePosition.z}`);
                     scene.appendChild(plantMarker);
                     
+                    // Add plant details to the list
                     const listItem = document.createElement('li');
                     listItem.innerText = `${plant.cname1 || "N/A"} ${plant.cname2 || ""} ${plant.cname3 || ""} - Genus: ${plant.genus || "N/A"}, Species: ${plant.species || "N/A"}, Cultivar: ${plant.cultivar || "N/A"} (${plant.distance.toFixed(2)}m)`;
                     plantList.appendChild(listItem);
@@ -69,7 +81,6 @@ window.onload = () => {
             .catch(err => console.error("Error loading CSV:", err));
     });
 };
-
 // Function to parse CSV text into an array of plant objects
 function parseCSV(csvText) {
     const rows = csvText.split("\n").slice(1); // Skip header row
@@ -112,20 +123,4 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in meters
-}
-
-// Function to calculate relative position from camera to plant
-function calculateRelativePosition(camera, plant) {
-    // Define relative distance (e.g., 5 meters in front of the camera)
-    const distance = 5; // Adjust as needed based on your scene scale
-
-    // Convert camera's rotation to radians
-    const cameraRotation = camera.getAttribute("rotation");
-    const cameraAngle = cameraRotation.y * Math.PI / 180; // Convert to radians
-
-    // Calculate relative position based on camera's orientation
-    const relativeX = -distance * Math.sin(cameraAngle);
-    const relativeZ = -distance * Math.cos(cameraAngle);
-
-    return { x: relativeX, y: 0, z: relativeZ };
 }

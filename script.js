@@ -1,5 +1,6 @@
 window.onload = () => {
   let userMarkerAdded = false;
+  let calibrationOffset = 0; // 🔧 New: store calibration offset locally
 
   const scene = document.querySelector('a-scene');
   const userLocation = document.getElementById('user-location');
@@ -8,40 +9,36 @@ window.onload = () => {
   const headingDisplay = document.getElementById('heading');
   const calibrateBtn = document.getElementById('calibrate-btn');
 
-  // 1) Check for Geolocation support
   if (!navigator.geolocation) {
     userLocation.textContent = "Geolocation is not supported by your browser.";
     return;
   }
 
-  // 2) Calibrate heading when user clicks the button
-    calibrateBtn.addEventListener('click', () => {
+  // 🔧 New: Calibrate heading without modifying AR.js attributes
+  calibrateBtn.addEventListener('click', () => {
     const rotation = camera.getAttribute('rotation');
     const currentHeading = rotation.y;
-    const desiredHeading = 0;
 
-    const offsetNeeded = (desiredHeading - currentHeading + 360) % 360;
+    // Assume user is facing north (0°), calculate offset
+    calibrationOffset = (360 - currentHeading + 360) % 360;
 
-    // ✅ Safe update without freezing camera
-    camera.components["gps-new-camera"].data.rotationOffset = offsetNeeded;
-    camera.components["gps-new-camera"].update();
+    alert(`Calibrated! Heading offset set to ${Math.round(calibrationOffset)}°`);
+    console.log("Calibration offset applied:", calibrationOffset);
+  });
 
-    console.log("Calibration offset applied:", offsetNeeded);
-    alert(`Calibration complete. Offset set to ${offsetNeeded.toFixed(2)}°`);
-    
-});
-
-
-  // 3) Track heading in real time (to display in #heading)
+  // ✅ Live heading display using corrected heading
   scene.addEventListener('loaded', () => {
     scene.addEventListener('frame', () => {
       const rotation = camera.getAttribute('rotation');
-      const heading = rotation.y;
-      headingDisplay.textContent = `Heading: ${Math.round(heading)}°`;
+      const correctedHeading = (rotation.y + calibrationOffset) % 360;
+
+      headingDisplay.textContent = `Heading: ${Math.round(correctedHeading)}°`;
+
+      // 🔧 Optional: you could use correctedHeading here to control marker filtering
     });
   });
 
-  // 4) Listen for GPS position updates
+  // ✅ Load plants on position update
   camera.addEventListener('gps-camera-update-position', (e) => {
     if (!e.detail.position) {
       console.warn("No position data received.");
@@ -53,7 +50,7 @@ window.onload = () => {
     console.log(`User Location: ${userLat}, ${userLon}`);
     userLocation.textContent = `Lat: ${userLat}, Lon: ${userLon}`;
 
-    // Add a red marker at the user's current location (once)
+    // 🔴 User red marker (once)
     if (!userMarkerAdded) {
       const userMarker = document.createElement("a-box");
       userMarker.setAttribute("scale", "1 1 1");
@@ -63,8 +60,8 @@ window.onload = () => {
       userMarkerAdded = true;
     }
 
-    // 5) Load CSV data, filter, and place nearest plants
-    fetch("./ABG.csv")
+    // ✅ Load CSV and plant markers
+    fetch("./ABG.csv") // 🔧 Make sure path matches your setup
       .then(response => {
         if (!response.ok) throw new Error("Failed to load CSV file.");
         return response.text();
@@ -73,22 +70,21 @@ window.onload = () => {
         console.log("CSV Loaded Successfully!");
         let plants = parseCSV(csvText);
 
-        // Calculate distance from user, filter and sort
+        // Add distance to each plant
         plants = plants
           .map(plant => ({
             ...plant,
             distance: getDistance(userLat, userLon, plant.lat, plant.lon)
           }))
-          .filter(plant => plant.distance <= 10) // within 10m
+          .filter(plant => plant.distance <= 10) // Filter to nearby
           .sort((a, b) => a.distance - b.distance)
-          .slice(0, 10); // top 10 nearest
+          .slice(0, 10); // Top 10 closest
 
         console.log("Nearest Plants:", plants);
 
-        // Clear out old items
         plantList.innerHTML = "";
 
-        // Create markers for each plant
+        // 🔵 Create a marker for each nearby plant
         plants.forEach(plant => {
           const plantMarker = document.createElement("a-box");
           plantMarker.setAttribute("scale", "1 1 1");
@@ -97,23 +93,12 @@ window.onload = () => {
           plantMarker.setAttribute("position", "0 1 0");
           scene.appendChild(plantMarker);
 
-          // Add to list in the info panel
           const listItem = document.createElement("li");
-          listItem.innerText = `${
-              plant.cname1 || "N/A"
-            } ${
-              plant.cname2 || ""
-            } ${
-              plant.cname3 || ""
-            } - Genus: ${
-              plant.genus || "N/A"
-            }, Species: ${
-              plant.species || "N/A"
-            }, Cultivar: ${
-              plant.cultivar || "N/A"
-            } (${
-              plant.distance.toFixed(2)
-            }m)`;
+          listItem.innerText = `${plant.cname1 || "N/A"} ${plant.cname2 || ""} ${
+            plant.cname3 || ""
+          } - Genus: ${plant.genus || "N/A"}, Species: ${plant.species || "N/A"}, Cultivar: ${
+            plant.cultivar || "N/A"
+          } (${plant.distance.toFixed(2)}m)`;
           plantList.appendChild(listItem);
         });
       })
@@ -124,18 +109,11 @@ window.onload = () => {
 // ---------------------------------------------------------
 // Helper: Parse CSV text into array of plant objects
 function parseCSV(csvText) {
-  // Remove the header row by slicing at index 1
-  const rows = csvText.split("\n").slice(1);
-
+  const rows = csvText.split("\n").slice(1); // skip header
   return rows
     .map(row => {
       const columns = row.split(",");
-
-      // Handle missing columns: push empty strings so we have at least 9
-      while (columns.length < 9) {
-        columns.push("");
-      }
-
+      while (columns.length < 9) columns.push("");
       return {
         s_id: columns[0]?.trim(),
         cname1: columns[1]?.trim() || "Unknown",
@@ -144,18 +122,17 @@ function parseCSV(csvText) {
         genus: columns[4]?.trim() || "Unknown",
         species: columns[5]?.trim() || "",
         cultivar: columns[6]?.trim() || "",
-        lon: parseFloat(columns[7]) || 0, // Default to 0 if missing
-        lat: parseFloat(columns[8]) || 0  // Default to 0 if missing
+        lon: parseFloat(columns[7]) || 0,
+        lat: parseFloat(columns[8]) || 0
       };
     })
-    // Filter out invalid entries (missing lat/lon or s_id)
     .filter(plant => plant.s_id && plant.lat !== 0 && plant.lon !== 0);
 }
 
 // ---------------------------------------------------------
-// Helper: Calculate distance between two GPS points (Haversine formula)
+// Helper: Haversine distance
 function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371e3; // Earth's radius in meters
+  const R = 6371e3;
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -167,5 +144,5 @@ function getDistance(lat1, lon1, lat2, lon2) {
     Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // distance in meters
+  return R * c;
 }

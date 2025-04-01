@@ -15,6 +15,9 @@ window.onload = () => {
             const rotation = camera.getAttribute("rotation");
             const heading = rotation.y;
 
+            if (headingDisplay) {
+                headingDisplay.textContent = `Heading: ${Math.round(heading)}°`;
+            }
         });
     });
 

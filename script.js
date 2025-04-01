@@ -25,13 +25,11 @@ window.onload = () => {
     const offsetNeeded = desiredHeading - currentHeading;
 
     // Get existing gps-new-camera attributes
-    const currentGpsCam = camera.getAttribute('gps-new-camera');
+    // const currentGpsCam = camera.getAttribute('gps-new-camera');
 
     // Apply the offset
-    camera.setAttribute('gps-new-camera', {
-      ...currentGpsCam,
-      rotationOffset: offsetNeeded
-    });
+    camera.setAttribute('gps-new-camera', 'rotationOffset', offsetNeeded);
+
 
     console.log("Calibration offset applied:", offsetNeeded);
     alert(`Calibration complete. Offset set to ${offsetNeeded.toFixed(2)}°`);

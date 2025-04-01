@@ -2,15 +2,21 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AR.js A-Frame Location-based</title>
+
+    <!-- A-Frame & AR.js scripts -->
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script type="text/javascript"
         src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/three.js/build/ar-threex-location-only.js"></script>
     <script type="text/javascript"
         src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
+
+    <!-- Your script file -->
     <script src="./script.js"></script>
+
+    <!-- Basic styling -->
     <style>
         * {
             margin: 0;
@@ -27,7 +33,7 @@
         }
 
         /* A-Frame Scene (70% height) */
-        #scene-container {
+        a-scene {
             position: absolute;
             top: 0;
             left: 0;
@@ -60,15 +66,23 @@
             list-style-type: decimal;
             /* Ensures numbers are shown */
         }
+
+        button {
+            margin-top: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
     </style>
 </head>
 
 <body>
-    <a-scene vr-mode-ui="enabled: false"
-        arjs="sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth:1280; displayHeight:960; videoTexture: true; debugUIEnabled: false"
-        renderer="antialias: true; alpha: true">
-        <a-camera arjs-device-orientation-controls='smoothingFactor: 0.1'
-            gps-new-camera='gpsMinDistance: 5; rotate: true'> </a-camera>
+    <!-- A-Frame Scene with AR.js parameters -->
+    <a-scene vr-mode-ui="enabled: false" arjs="sourceType: webcam; sourceWidth:1280; sourceHeight:960;
+          displayWidth:1280; displayHeight:960; videoTexture: true;
+          debugUIEnabled: false" renderer="antialias: true; alpha: true">
+        <!-- Camera with gps-new-camera -->
+        <a-camera arjs-device-orientation-controls="smoothingFactor: 0.1"
+            gps-new-camera="gpsMinDistance: 5; rotate: true"></a-camera>
     </a-scene>
 
     <!-- Info Panel -->
@@ -77,6 +91,9 @@
         <p id="user-location">Fetching data...</p>
         <p id="heading">Heading: ...</p>
         <ol id="plant-list"> Closest plants </ol>
+
+        <!-- Calibrate Button -->
+        <button id="calibrate-btn">Calibrate Heading</button>
     </div>
 </body>
 

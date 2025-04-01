@@ -10,16 +10,16 @@ window.onload = () => {
         return;
     }
 
-    // scene.addEventListener('loaded', () => {
-    //     scene.addEventListener('frame', () => {
-    //         const rotation = camera.getAttribute("rotation");
-    //         const heading = rotation.y;
+    scene.addEventListener('loaded', () => {
+        scene.addEventListener('frame', () => {
+            const rotation = camera.getAttribute("rotation");
+            const heading = rotation.y;
 
-    //         if (headingDisplay) {
-    //             headingDisplay.textContent = `Heading: ${Math.round(heading)}°`;
-    //         }
-    //     });
-    // });
+            if (headingDisplay) {
+                headingDisplay.textContent = `Heading: ${Math.round(heading)}°`;
+            }
+        });
+    });
 
     camera.addEventListener("gps-camera-update-position", (e) => {
         
@@ -43,7 +43,7 @@ window.onload = () => {
             userMarkerAdded = true;
         }
 
-        fetch("../ABG.csv")
+        fetch("./ABG.csv")
             .then(response => {
                 if (!response.ok) throw new Error("Failed to load CSV file.");
                 return response.text();

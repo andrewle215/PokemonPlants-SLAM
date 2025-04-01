@@ -67,7 +67,7 @@ window.onload = () => {
     }
 
     // 5) Load CSV data, filter, and place nearest plants
-    fetch("../ABG.csv")
+    fetch("./ABG.csv")
       .then(response => {
         if (!response.ok) throw new Error("Failed to load CSV file.");
         return response.text();

@@ -67,8 +67,10 @@
     <a-scene vr-mode-ui="enabled: false"
         arjs="sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth:1280; displayHeight:960; videoTexture: true; debugUIEnabled: false"
         renderer="antialias: true; alpha: true">
-        <a-camera arjs-device-orientation-controls='smoothingFactor: 0.1'
-            gps-new-camera='gpsMinDistance: 5; rotate: true'> </a-camera>
+        <!-- <a-camera arjs-device-orientation-controls='smoothingFactor: 0.1'
+            gps-new-camera='gpsMinDistance: 5; rotate: true'> </a-camera> -->
+
+            <a-camera gps-camera rotation-reader></a-camera>
     </a-scene>
 
     <!-- Info Panel -->

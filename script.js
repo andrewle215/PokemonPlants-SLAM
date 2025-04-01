@@ -10,7 +10,16 @@ window.onload = () => {
         return;
     }
 
+    scene.addEventListener('loaded', () => {
+        scene.addEventListener('frame', () => {
+            const rotation = camera.getAttribute("rotation");
+            const heading = rotation.y;
+
+        });
+    });
+
     camera.addEventListener("gps-camera-update-position", (e) => {
+        
         if (!e.detail.position) {
             console.warn("No position data received.");
             return;

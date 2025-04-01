@@ -15,21 +15,6 @@ window.onload = () => {
   }
 
   // 2) Calibrate heading when user clicks the button
-    calibrateBtn.addEventListener('click', () => {
-    const rotation = camera.getAttribute('rotation');
-    const currentHeading = rotation.y;
-    const desiredHeading = 0;
-
-    const offsetNeeded = (desiredHeading - currentHeading + 360) % 360;
-
-    // ✅ Safe update without freezing camera
-    camera.components["gps-new-camera"].data.rotationOffset = offsetNeeded;
-    camera.components["gps-new-camera"].update();
-
-    console.log("Calibration offset applied:", offsetNeeded);
-    alert(`Calibration complete. Offset set to ${offsetNeeded.toFixed(2)}°`);
-    
-});
 
 
   // 3) Track heading in real time (to display in #heading)

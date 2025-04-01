@@ -51,8 +51,8 @@
         <ol id="plant-list">Closest plants</ol>
     </div>
 
+    
     <script>
-        // ✅ Apply offset from localStorage at startup
         const camera = document.querySelector('[gps-new-camera]');
         const offset = parseFloat(localStorage.getItem('calibrationOffset') || '0');
         camera.setAttribute('gps-new-camera', {
@@ -60,7 +60,7 @@
             rotate: true,
             rotationOffset: offset
         });
-        console.log('Applied rotationOffset from calibration:', offset);
+        console.log('✅ Applied rotationOffset from calibration:', offset);
     </script>
 </body>
 

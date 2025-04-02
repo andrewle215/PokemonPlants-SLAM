@@ -71,6 +71,12 @@
             rotationOffset: offset
         });
         console.log('✅ Applied rotationOffset from calibration:', offset);
+
+        // ✅ Optional: Force layout reflow after a short delay
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+            console.log('🔁 Forced layout resize');
+        }, 500);
     </script>
 </body>
 

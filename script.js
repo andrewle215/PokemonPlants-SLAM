@@ -87,9 +87,16 @@ window.onload = () => {
           plantMarker.setAttribute("event-set__leave", "_event: mouseleave; material.color: blue");
 
           plantMarker.addEventListener("click", () => {
-            alert(`📍 Plant: ${plant.cname1 || "Unknown"}\nGenus: ${plant.genus}\nDistance: ${plant.distance.toFixed(1)}m`);
+            
+            
+            const plantInfoText = `
+                🌱 <strong>${plant.cname1 || "Unknown"}</strong><br>
+                Genus: ${plant.genus || "N/A"}<br>
+                Species: ${plant.species || "N/A"}<br>
+                Distance: ${plant.distance.toFixed(1)} meters
+            `;
+            document.getElementById("selected-plant-info").innerHTML = plantInfoText;
             });
-          scene.appendChild(plantMarker);
 
           // Add to list in the info panel
           const listItem = document.createElement("li");

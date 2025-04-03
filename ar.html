@@ -70,7 +70,7 @@
         const camera = document.querySelector('[gps-new-camera]');
         const offset = parseFloat(localStorage.getItem('calibrationOffset') || '0');
         camera.setAttribute('gps-new-camera', {
-            gpsMinDistance: 3,
+            gpsMinDistance: 5,
             rotate: true,
             rotationOffset: offset
         });

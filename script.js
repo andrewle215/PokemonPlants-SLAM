@@ -1,39 +1,48 @@
 window.onload = () => {
+  let userLat = null;
+  let userLon = null;
   let userMarker = null;
-
-  const scene = document.querySelector('a-scene');
-  const userLocation = document.getElementById('user-location');
-  const camera = document.querySelector('[gps-new-camera]');
-  const plantList = document.getElementById('plant-list');
-  const headingDisplay = document.getElementById('heading');
-  const selectedPlantInfo = document.getElementById('selected-plant-info');
-
   let blueMarkers = [];
 
-  if (!navigator.geolocation) {
-    userLocation.textContent = "Geolocation is not supported by your browser.";
-    return;
-  }
+  const scene = document.querySelector('a-scene');
+  const camera = document.querySelector('[gps-new-camera]');
+  const userLocation = document.getElementById('user-location');
+  const headingDisplay = document.getElementById('heading');
+  const plantList = document.getElementById('plant-list');
+  const selectedPlantInfo = document.getElementById('selected-plant-info');
 
-  // Heading tracker
+  // Heading display
   scene.addEventListener('loaded', () => {
     scene.addEventListener('frame', () => {
       const rotation = camera.getAttribute('rotation');
-      const heading = rotation.y;
-      headingDisplay.textContent = `Heading: ${Math.round(heading)}°`;
+      headingDisplay.textContent = `Heading: ${Math.round(rotation.y)}°`;
     });
   });
 
-  // Live GPS updates
-  camera.addEventListener('gps-camera-update-position', (e) => {
-    if (!e.detail.position) return;
+  // Watch GPS position continuously
+  navigator.geolocation.watchPosition(
+    (pos) => {
+      userLat = pos.coords.latitude;
+      userLon = pos.coords.longitude;
+    },
+    (err) => {
+      console.error("GPS Error:", err);
+      userLocation.textContent = "GPS error";
+    },
+    {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 10000
+    }
+  );
 
-    const userLat = e.detail.position.latitude;
-    const userLon = e.detail.position.longitude;
-    console.log(`📍 New location: ${userLat}, ${userLon}`);
+  // Run this every 3 seconds
+  setInterval(() => {
+    if (!userLat || !userLon) return;
+
     userLocation.textContent = `Lat: ${userLat}, Lon: ${userLon}`;
 
-    // 🔴 Update or create red user marker
+    // 🔴 Red user marker
     if (!userMarker) {
       userMarker = document.createElement("a-box");
       userMarker.setAttribute("scale", "1 1 1");
@@ -46,61 +55,52 @@ window.onload = () => {
     blueMarkers.forEach(marker => scene.removeChild(marker));
     blueMarkers = [];
 
-    // 🔁 Re-filter and re-add blue markers
+    // 🔵 Load + filter nearest plants
     fetch("./ABG.csv")
-      .then(response => {
-        if (!response.ok) throw new Error("Failed to load CSV");
-        return response.text();
-      })
+      .then(response => response.text())
       .then(csvText => {
-        let plants = parseCSV(csvText);
-
-        plants = plants
-          .map(plant => ({
-            ...plant,
-            distance: getDistance(userLat, userLon, plant.lat, plant.lon)
+        const plants = parseCSV(csvText)
+          .map(p => ({
+            ...p,
+            distance: getDistance(userLat, userLon, p.lat, p.lon)
           }))
-          .filter(plant => plant.distance <= 8)
+          .filter(p => p.distance <= 10)
           .sort((a, b) => a.distance - b.distance)
           .slice(0, 10);
 
-        console.log("🔵 Closest plants:", plants);
+        // Update UI list
         plantList.innerHTML = "";
-
         plants.forEach(plant => {
-          const plantMarker = document.createElement("a-box");
-          plantMarker.setAttribute("scale", "0.2 0.2 0.2");
-          plantMarker.setAttribute("material", "color: blue");
-          plantMarker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
-          plantMarker.setAttribute("position", "0 0.1 0");
+          const marker = document.createElement("a-box");
+          marker.setAttribute("scale", "1 1 1");
+          marker.setAttribute("material", "color: blue");
+          marker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
+          marker.setAttribute("position", "0 1 0");
+          marker.setAttribute("class", "clickable");
 
-          plantMarker.setAttribute("class", "clickable");
-          plantMarker.setAttribute("event-set__enter", "_event: mouseenter; material.color: yellow");
-          plantMarker.setAttribute("event-set__leave", "_event: mouseleave; material.color: blue");
-
-          plantMarker.addEventListener("click", () => {
-            const info = `
+          marker.addEventListener("click", () => {
+            selectedPlantInfo.innerHTML = `
               🌱 <strong>${plant.cname1 || "Unknown"}</strong><br>
               Genus: ${plant.genus || "N/A"}<br>
               Species: ${plant.species || "N/A"}<br>
               Distance: ${plant.distance.toFixed(1)} meters
             `;
-            selectedPlantInfo.innerHTML = info;
           });
 
-          scene.appendChild(plantMarker);
-          blueMarkers.push(plantMarker);
+          scene.appendChild(marker);
+          blueMarkers.push(marker);
 
           const listItem = document.createElement("li");
-          listItem.innerText = `${plant.cname1 || "N/A"} ${plant.cname2 || ""} ${plant.cname3 || ""} - Genus: ${plant.genus || "N/A"}, Species: ${plant.species || "N/A"}, Cultivar: ${plant.cultivar || "N/A"} (${plant.distance.toFixed(2)}m)`;
+          listItem.innerText = `${plant.cname1 || "N/A"} - Genus: ${plant.genus}, Species: ${plant.species} (${plant.distance.toFixed(1)}m)`;
           plantList.appendChild(listItem);
         });
       })
-      .catch(err => console.error("Error loading CSV:", err));
-  });
+      .catch(err => console.error("CSV load error:", err));
+  }, 3000); // every 3 seconds
 };
 
-// CSV parsing
+// --- Helpers ---
+
 function parseCSV(csvText) {
   const rows = csvText.split("\n").slice(1);
   return rows
@@ -119,10 +119,9 @@ function parseCSV(csvText) {
         lat: parseFloat(columns[8]) || 0
       };
     })
-    .filter(plant => plant.s_id && plant.lat !== 0 && plant.lon !== 0);
+    .filter(p => p.s_id && p.lat !== 0 && p.lon !== 0);
 }
 
-// Distance formula
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
   const φ1 = (lat1 * Math.PI) / 180;
@@ -133,5 +132,6 @@ function getDistance(lat1, lon1, lat2, lon2) {
   const a = Math.sin(Δφ / 2) ** 2 +
             Math.cos(φ1) * Math.cos(φ2) *
             Math.sin(Δλ / 2) ** 2;
+
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }

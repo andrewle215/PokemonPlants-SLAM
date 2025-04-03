@@ -60,7 +60,7 @@ window.onload = () => {
             ...plant,
             distance: getDistance(userLat, userLon, plant.lat, plant.lon)
           }))
-          .filter(plant => plant.distance <= 5)
+          .filter(plant => plant.distance <= 8)
           .sort((a, b) => a.distance - b.distance)
           .slice(0, 10);
 
@@ -72,7 +72,7 @@ window.onload = () => {
           plantMarker.setAttribute("scale", "0.2 0.2 0.2");
           plantMarker.setAttribute("material", "color: blue");
           plantMarker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
-          plantMarker.setAttribute("position", "0 1 0");
+          plantMarker.setAttribute("position", "0 0.1 0");
 
           plantMarker.setAttribute("class", "clickable");
           plantMarker.setAttribute("event-set__enter", "_event: mouseenter; material.color: yellow");

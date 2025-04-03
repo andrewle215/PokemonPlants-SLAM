@@ -10,14 +10,13 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
     <script src="./script.js"></script>
     <style>
-        html,
-        body {
+        body,
+        html {
             margin: 0;
             padding: 0;
+            overflow: hidden;
             height: 100%;
             width: 100%;
-            overflow: hidden;
-            font-family: sans-serif;
         }
 
         a-scene {
@@ -38,40 +37,51 @@
             background: white;
             z-index: 1000;
             padding: 10px;
-            box-sizing: border-box;
+            font-family: sans-serif;
             overflow-y: auto;
         }
 
-        #user-location {
-            font-weight: bold;
-        }
-
-        #plant-list {
-            list-style-type: decimal;
-            padding-left: 1rem;
-        }
-
-        #selected-plant-info {
+        button {
             margin-top: 10px;
         }
     </style>
 </head>
 
 <body>
+    <!-- ✅ Only ONE scene here -->
     <a-scene vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false"
         renderer="antialias: true; alpha: true">
-        <a-camera gps-new-camera rotation-reader>
-            <a-entity cursor="rayOrigin: mouse" raycaster="objects: .clickable"></a-entity>
-        </a-camera>
+        <a-entity cursor="rayOrigin: mouse"></a-entity>
+        <a-camera gps-new-camera></a-camera>
     </a-scene>
 
     <div id="info-container">
-        <p>🌿 <strong>Plants V2</strong></p>
+        <p>Plants V2 🌺</p>
         <p id="user-location">Fetching location...</p>
         <p id="heading">Heading: ...</p>
-        <p id="selected-plant-info">Tap a plant to view details</p>
+        <p id="selected-plant-info">Tap a blue plant marker to see details here</p>
+
         <ol id="plant-list">Closest plants</ol>
+
     </div>
+
+    <!-- ✅ Load offset once -->
+    <script>
+        const camera = document.querySelector('[gps-new-camera]');
+        const offset = parseFloat(localStorage.getItem('calibrationOffset') || '0');
+        camera.setAttribute('gps-new-camera', {
+            gpsMinDistance: 3,
+            rotate: true,
+            rotationOffset: offset
+        });
+        console.log('✅ Applied rotationOffset from calibration:', offset);
+
+        // ✅ Optional: Force layout reflow after a short delay
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+            console.log('🔁 Forced layout resize');
+        }, 500);
+    </script>
 </body>
 
 </html>

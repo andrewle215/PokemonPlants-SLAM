@@ -80,6 +80,15 @@ window.onload = () => {
           plantMarker.setAttribute("material", "color: blue");
           plantMarker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
           plantMarker.setAttribute("position", "0 1 0");
+
+
+          plantMarker.setAttribute("class", "clickable");
+          plantMarker.setAttribute("event-set__enter", "_event: mouseenter; material.color: yellow");
+          plantMarker.setAttribute("event-set__leave", "_event: mouseleave; material.color: blue");
+
+          plantMarker.addEventListener("click", () => {
+            alert(`📍 Plant: ${plant.cname1 || "Unknown"}\nGenus: ${plant.genus}\nDistance: ${plant.distance.toFixed(1)}m`);
+            });
           scene.appendChild(plantMarker);
 
           // Add to list in the info panel

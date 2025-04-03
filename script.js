@@ -1,23 +1,21 @@
 window.onload = () => {
-  let userMarkerAdded = false;
+  let userMarker = null;
 
   const scene = document.querySelector('a-scene');
   const userLocation = document.getElementById('user-location');
   const camera = document.querySelector('[gps-new-camera]');
   const plantList = document.getElementById('plant-list');
   const headingDisplay = document.getElementById('heading');
-  const calibrateBtn = document.getElementById('calibrate-btn');
+  const selectedPlantInfo = document.getElementById('selected-plant-info');
 
-  // 1) Check for Geolocation support
+  let blueMarkers = [];
+
   if (!navigator.geolocation) {
     userLocation.textContent = "Geolocation is not supported by your browser.";
     return;
   }
 
-  // 2) Calibrate heading when user clicks the button
-
-
-  // 3) Track heading in real time (to display in #heading)
+  // Heading tracker
   scene.addEventListener('loaded', () => {
     scene.addEventListener('frame', () => {
       const rotation = camera.getAttribute('rotation');
@@ -26,98 +24,75 @@ window.onload = () => {
     });
   });
 
-  // 4) Listen for GPS position updates
+  // Live GPS updates
   camera.addEventListener('gps-camera-update-position', (e) => {
-    if (!e.detail.position) {
-      console.warn("No position data received.");
-      return;
-    }
+    if (!e.detail.position) return;
 
     const userLat = e.detail.position.latitude;
     const userLon = e.detail.position.longitude;
-    console.log(`User Location: ${userLat}, ${userLon}`);
+    console.log(`📍 New location: ${userLat}, ${userLon}`);
     userLocation.textContent = `Lat: ${userLat}, Lon: ${userLon}`;
 
-    // Add a red marker at the user's current location (once)
-    if (!userMarkerAdded) {
-      const userMarker = document.createElement("a-box");
+    // 🔴 Update or create red user marker
+    if (!userMarker) {
+      userMarker = document.createElement("a-box");
       userMarker.setAttribute("scale", "1 1 1");
       userMarker.setAttribute("material", "color: red");
-      userMarker.setAttribute("gps-new-entity-place", `latitude: ${userLat}; longitude: ${userLon}`);
       scene.appendChild(userMarker);
-      userMarkerAdded = true;
     }
+    userMarker.setAttribute("gps-new-entity-place", `latitude: ${userLat}; longitude: ${userLon}`);
 
-    // 5) Load CSV data, filter, and place nearest plants
+    // 🔁 Remove old blue markers
+    blueMarkers.forEach(marker => scene.removeChild(marker));
+    blueMarkers = [];
+
+    // 🔁 Re-filter and re-add blue markers
     fetch("./ABG.csv")
       .then(response => {
-        if (!response.ok) throw new Error("Failed to load CSV file.");
+        if (!response.ok) throw new Error("Failed to load CSV");
         return response.text();
       })
       .then(csvText => {
-        console.log("CSV Loaded Successfully!");
         let plants = parseCSV(csvText);
 
-        // Calculate distance from user, filter and sort
         plants = plants
           .map(plant => ({
             ...plant,
             distance: getDistance(userLat, userLon, plant.lat, plant.lon)
           }))
-          .filter(plant => plant.distance <= 10) // within 10m
+          .filter(plant => plant.distance <= 10)
           .sort((a, b) => a.distance - b.distance)
-          .slice(0, 10); // top 10 nearest
+          .slice(0, 10);
 
-        console.log("Nearest Plants:", plants);
-
-        // Clear out old items
+        console.log("🔵 Closest plants:", plants);
         plantList.innerHTML = "";
 
-        // Create markers for each plant
         plants.forEach(plant => {
-          
-            const plantMarker = document.createElement("a-box");
-            plantMarker.setAttribute("scale", "1 1 1");
-            plantMarker.setAttribute("material", "color: blue");
-            plantMarker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
-            plantMarker.setAttribute("position", "0 1 0");
+          const plantMarker = document.createElement("a-box");
+          plantMarker.setAttribute("scale", "1 1 1");
+          plantMarker.setAttribute("material", "color: blue");
+          plantMarker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
+          plantMarker.setAttribute("position", "0 1 0");
 
-            plantMarker.setAttribute("class", "clickable");
-            plantMarker.setAttribute("event-set__enter", "_event: mouseenter; material.color: yellow");
-            plantMarker.setAttribute("event-set__leave", "_event: mouseleave; material.color: blue");
+          plantMarker.setAttribute("class", "clickable");
+          plantMarker.setAttribute("event-set__enter", "_event: mouseenter; material.color: yellow");
+          plantMarker.setAttribute("event-set__leave", "_event: mouseleave; material.color: blue");
 
-            plantMarker.addEventListener("click", () => {
-            const plantInfoText = `
-                🌱 <strong>${plant.cname1 || "Unknown"}</strong><br>
-                Genus: ${plant.genus || "N/A"}<br>
-                Species: ${plant.species || "N/A"}<br>
-                Distance: ${plant.distance.toFixed(1)} meters
+          plantMarker.addEventListener("click", () => {
+            const info = `
+              🌱 <strong>${plant.cname1 || "Unknown"}</strong><br>
+              Genus: ${plant.genus || "N/A"}<br>
+              Species: ${plant.species || "N/A"}<br>
+              Distance: ${plant.distance.toFixed(1)} meters
             `;
-            document.getElementById("selected-plant-info").innerHTML = plantInfoText;
-            });
+            selectedPlantInfo.innerHTML = info;
+          });
 
-            // ✅ THIS LINE ADDS THE BOX TO THE SCENE
-            scene.appendChild(plantMarker);
+          scene.appendChild(plantMarker);
+          blueMarkers.push(plantMarker);
 
-
-
-          // Add to list in the info panel
           const listItem = document.createElement("li");
-          listItem.innerText = `${
-              plant.cname1 || "N/A"
-            } ${
-              plant.cname2 || ""
-            } ${
-              plant.cname3 || ""
-            } - Genus: ${
-              plant.genus || "N/A"
-            }, Species: ${
-              plant.species || "N/A"
-            }, Cultivar: ${
-              plant.cultivar || "N/A"
-            } (${
-              plant.distance.toFixed(2)
-            }m)`;
+          listItem.innerText = `${plant.cname1 || "N/A"} ${plant.cname2 || ""} ${plant.cname3 || ""} - Genus: ${plant.genus || "N/A"}, Species: ${plant.species || "N/A"}, Cultivar: ${plant.cultivar || "N/A"} (${plant.distance.toFixed(2)}m)`;
           plantList.appendChild(listItem);
         });
       })
@@ -125,21 +100,13 @@ window.onload = () => {
   });
 };
 
-// ---------------------------------------------------------
-// Helper: Parse CSV text into array of plant objects
+// CSV parsing
 function parseCSV(csvText) {
-  // Remove the header row by slicing at index 1
   const rows = csvText.split("\n").slice(1);
-
   return rows
     .map(row => {
       const columns = row.split(",");
-
-      // Handle missing columns: push empty strings so we have at least 9
-      while (columns.length < 9) {
-        columns.push("");
-      }
-
+      while (columns.length < 9) columns.push("");
       return {
         s_id: columns[0]?.trim(),
         cname1: columns[1]?.trim() || "Unknown",
@@ -148,28 +115,23 @@ function parseCSV(csvText) {
         genus: columns[4]?.trim() || "Unknown",
         species: columns[5]?.trim() || "",
         cultivar: columns[6]?.trim() || "",
-        lon: parseFloat(columns[7]) || 0, // Default to 0 if missing
-        lat: parseFloat(columns[8]) || 0  // Default to 0 if missing
+        lon: parseFloat(columns[7]) || 0,
+        lat: parseFloat(columns[8]) || 0
       };
     })
-    // Filter out invalid entries (missing lat/lon or s_id)
     .filter(plant => plant.s_id && plant.lat !== 0 && plant.lon !== 0);
 }
 
-// ---------------------------------------------------------
-// Helper: Calculate distance between two GPS points (Haversine formula)
+// Distance formula
 function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371e3; // Earth's radius in meters
+  const R = 6371e3;
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-  const a =
-    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // distance in meters
+  const a = Math.sin(Δφ / 2) ** 2 +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) ** 2;
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }

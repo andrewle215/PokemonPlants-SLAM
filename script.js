@@ -72,7 +72,7 @@ window.onload = () => {
         plantList.innerHTML = "";
         plants.forEach(plant => {
           const marker = document.createElement("a-box");
-          marker.setAttribute("scale", "1 1 1");
+          marker.setAttribute("scale", "0.5 0.2 0.5");
           marker.setAttribute("material", "color: blue");
           marker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
           marker.setAttribute("position", "0 1 0");

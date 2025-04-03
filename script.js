@@ -75,20 +75,18 @@ window.onload = () => {
 
         // Create markers for each plant
         plants.forEach(plant => {
-          const plantMarker = document.createElement("a-box");
-          plantMarker.setAttribute("scale", "1 1 1");
-          plantMarker.setAttribute("material", "color: blue");
-          plantMarker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
-          plantMarker.setAttribute("position", "0 1 0");
+          
+            const plantMarker = document.createElement("a-box");
+            plantMarker.setAttribute("scale", "1 1 1");
+            plantMarker.setAttribute("material", "color: blue");
+            plantMarker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
+            plantMarker.setAttribute("position", "0 1 0");
 
+            plantMarker.setAttribute("class", "clickable");
+            plantMarker.setAttribute("event-set__enter", "_event: mouseenter; material.color: yellow");
+            plantMarker.setAttribute("event-set__leave", "_event: mouseleave; material.color: blue");
 
-          plantMarker.setAttribute("class", "clickable");
-          plantMarker.setAttribute("event-set__enter", "_event: mouseenter; material.color: yellow");
-          plantMarker.setAttribute("event-set__leave", "_event: mouseleave; material.color: blue");
-
-          plantMarker.addEventListener("click", () => {
-            
-            
+            plantMarker.addEventListener("click", () => {
             const plantInfoText = `
                 🌱 <strong>${plant.cname1 || "Unknown"}</strong><br>
                 Genus: ${plant.genus || "N/A"}<br>
@@ -97,6 +95,11 @@ window.onload = () => {
             `;
             document.getElementById("selected-plant-info").innerHTML = plantInfoText;
             });
+
+            // ✅ THIS LINE ADDS THE BOX TO THE SCENE
+            scene.appendChild(plantMarker);
+
+
 
           // Add to list in the info panel
           const listItem = document.createElement("li");

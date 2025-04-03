@@ -51,8 +51,9 @@
     <!-- ✅ Only ONE scene here -->
     <a-scene vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false"
         renderer="antialias: true; alpha: true">
-        <a-entity cursor="rayOrigin: mouse"></a-entity>
-        <a-camera gps-new-camera></a-camera>
+        <a-camera gps-new-camera>
+            <a-cursor raycaster="objects: .clickable"></a-cursor>
+        </a-camera>
     </a-scene>
 
     <div id="info-container">

@@ -5,12 +5,12 @@
     <meta charset="UTF-8" />
     <title>Calibrate Heading</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 2rem;
             text-align: center;
+            background: #f5f5f5;
         }
 
         h1 {
@@ -21,6 +21,7 @@
             padding: 1rem 2rem;
             font-size: 1.2rem;
             margin-top: 1rem;
+            cursor: pointer;
         }
 
         #heading {
@@ -42,14 +43,20 @@
             height: 100px;
             transition: transform 0.3s ease;
         }
+
+        p.note {
+            margin-top: 2rem;
+            font-size: 0.95rem;
+            color: #666;
+        }
     </style>
 </head>
 
 <body>
-    <h1>🔁 Calibrate Your Heading</h1>
-    <p>Face north (or a known direction), then tap the button.</p>
+    <h1>🧭 Calibrate Your Heading</h1>
+    <p>Point your phone toward true North, then double-tap to calibrate.</p>
 
-    <button id="calibrate-btn">Calibrate & Enter AR</button>
+    <button id="calibrate-btn">Tap to Enable Compass<br><small>(Double-tap to Calibrate & Enter AR)</small></button>
 
     <p id="heading">Current Heading: ...</p>
     <p id="direction">Direction: ...</p>
@@ -59,43 +66,64 @@
             alt="Compass Arrow" id="arrow" />
     </div>
 
+    <p class="note">This uses your phone's magnetic compass. You may need to rotate your phone in a figure-8 motion to
+        calibrate it.</p>
+
     <script>
         const headingDisplay = document.getElementById('heading');
         const directionDisplay = document.getElementById('direction');
         const arrow = document.getElementById('arrow');
         const button = document.getElementById('calibrate-btn');
 
-        let heading = 0;
+        let currentHeading = 0;
+        let compassStarted = false;
 
-        // Create an embedded A-Frame scene for orientation detection
-        const scene = document.createElement('a-scene');
-        scene.setAttribute('embedded', '');
-        const camera = document.createElement('a-camera');
-        camera.setAttribute('gps-new-camera', '');
-        scene.appendChild(camera);
-        document.body.appendChild(scene);
-
-        // Update heading & direction in real-time
-        scene.addEventListener('loaded', () => {
-            scene.addEventListener('frame', () => {
-                const rot = camera.getAttribute('rotation');
-                heading = (rot.y + 360) % 360; // normalize to 0–360
-                headingDisplay.textContent = `Current Heading: ${Math.round(heading)}°`;
-                directionDisplay.textContent = `Direction: ${getCardinalDirection(heading)}`;
-                arrow.style.transform = `rotate(${heading}deg)`;
-            });
-        });
-
-        // Convert heading in degrees to cardinal direction
+        // Map degrees to compass direction
         function getCardinalDirection(angle) {
             const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
             const index = Math.round(angle / 45) % 8;
             return directions[index];
         }
 
-        // Save offset and continue to AR
-        button.addEventListener('click', () => {
-            const offset = (360 - heading + 360) % 360;
+        // Start compass
+        function startCompass() {
+            if (compassStarted) return;
+            compassStarted = true;
+
+            window.addEventListener('deviceorientationabsolute', (event) => {
+                if (event.alpha !== null) {
+                    currentHeading = 360 - event.alpha; // Adjust for compass direction
+                    headingDisplay.textContent = `Current Heading: ${Math.round(currentHeading)}°`;
+                    directionDisplay.textContent = `Direction: ${getCardinalDirection(currentHeading)}`;
+                    arrow.style.transform = `rotate(${currentHeading}deg)`;
+                } else {
+                    headingDisplay.textContent = "Compass data not available.";
+                }
+            }, true);
+        }
+
+        // iOS needs permission to access orientation
+        button.addEventListener('click', async () => {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission === 'granted') {
+                        startCompass();
+                    } else {
+                        alert("Permission denied. Cannot access compass.");
+                    }
+                } catch (err) {
+                    alert("Error requesting permission: " + err);
+                }
+            } else {
+                // Android or already allowed
+                startCompass();
+            }
+        });
+
+        // Double tap to calibrate & save offset
+        button.addEventListener('dblclick', () => {
+            const offset = (360 - currentHeading + 360) % 360;
             localStorage.setItem('calibrationOffset', offset);
             window.location.href = 'ar.html';
         });

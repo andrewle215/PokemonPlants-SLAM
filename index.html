@@ -10,9 +10,14 @@
             font-family: Arial, sans-serif;
             padding: 2rem;
             text-align: center;
+            background: #f9f9f9;
         }
 
-        .compass {
+        h1 {
+            margin-bottom: 1rem;
+        }
+
+        .compass-wrapper {
             position: relative;
             width: 300px;
             height: 300px;
@@ -21,36 +26,35 @@
 
         .arrow {
             position: absolute;
-            top: 50%;
+            top: 0;
             left: 50%;
+            transform: translateX(-50%);
             width: 0;
             height: 0;
-            transform: translate(-50%, -150%);
-            border-style: solid;
-            border-width: 50px 20px 0 20px;
-            border-color: red transparent transparent transparent;
-            z-index: 10;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 40px solid red;
+            z-index: 2;
         }
 
-        .compass-circle {
+        .compass-img {
             width: 100%;
             height: 100%;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Compass_Rose_Fixed.svg/1024px-Compass_Rose_Fixed.svg.png');
+            background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Compass_Rose_Fixed.svg/1024px-Compass_Rose_Fixed.svg.png') center center no-repeat;
             background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            transition: transform 0.3s ease;
-        }
-
-        button {
-            padding: 1rem 2rem;
-            font-size: 1rem;
-            margin-top: 1rem;
+            transition: transform 0.2s ease-out;
         }
 
         #heading-value {
             font-size: 1.3rem;
             margin-top: 1rem;
+        }
+
+        button {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            margin: 1rem 0.5rem 0;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -58,20 +62,21 @@
 <body>
 
     <h1>🧭 Calibrate Heading</h1>
-    <p>Point your phone North, then tap "Calibrate".</p>
+    <p>Point your phone toward true North, then tap Calibrate.</p>
 
-    <div class="compass">
+    <div class="compass-wrapper">
         <div class="arrow"></div>
-        <div class="compass-circle" id="compass-circle"></div>
+        <div class="compass-img" id="compass-img"></div>
     </div>
 
     <p id="heading-value">Heading: ...</p>
+
     <button id="start-btn">Start Compass</button>
     <button id="calibrate-btn">Calibrate & Enter AR</button>
 
     <script>
-        const compassCircle = document.getElementById("compass-circle");
-        const headingDisplay = document.getElementById("heading-value");
+        const compassImg = document.getElementById("compass-img");
+        const headingValue = document.getElementById("heading-value");
         const startBtn = document.getElementById("start-btn");
         const calibrateBtn = document.getElementById("calibrate-btn");
 
@@ -79,27 +84,32 @@
 
         function startCompass() {
             if (typeof DeviceOrientationEvent.requestPermission === "function") {
+                // iOS
                 DeviceOrientationEvent.requestPermission()
                     .then(permission => {
                         if (permission === "granted") {
-                            window.addEventListener("deviceorientation", onCompass, true);
+                            window.addEventListener("deviceorientation", handleOrientation, true);
                         } else {
-                            alert("Compass permission denied.");
+                            alert("Compass access denied.");
                         }
                     })
-                    .catch(() => alert("Compass not supported."));
+                    .catch(err => {
+                        alert("Compass permission not supported.");
+                        console.error(err);
+                    });
             } else {
-                window.addEventListener("deviceorientationabsolute", onCompass, true);
-                window.addEventListener("deviceorientation", onCompass, true);
+                // Android
+                window.addEventListener("deviceorientationabsolute", handleOrientation, true);
+                window.addEventListener("deviceorientation", handleOrientation, true);
             }
         }
 
-        function onCompass(event) {
-            let heading = event.webkitCompassHeading || (360 - event.alpha);
+        function handleOrientation(event) {
+            const heading = event.webkitCompassHeading || (360 - event.alpha);
             if (heading !== undefined && !isNaN(heading)) {
                 currentHeading = heading;
-                headingDisplay.textContent = `Heading: ${Math.round(heading)}°`;
-                compassCircle.style.transform = `rotate(${-heading}deg)`;
+                headingValue.textContent = `Heading: ${Math.round(heading)}°`;
+                compassImg.style.transform = `rotate(${-heading}deg)`;
             }
         }
 
@@ -107,11 +117,10 @@
 
         calibrateBtn.addEventListener("click", () => {
             const offset = (360 - currentHeading + 360) % 360;
-            localStorage.setItem('calibrationOffset', offset);
-            window.location.href = 'ar.html';
+            localStorage.setItem("calibrationOffset", offset);
+            window.location.href = "ar.html";
         });
     </script>
-
 </body>
 
 </html>

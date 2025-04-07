@@ -10,123 +10,109 @@
             font-family: Arial, sans-serif;
             padding: 2rem;
             text-align: center;
-            background: #f5f5f5;
         }
 
-        h1 {
-            font-size: 2rem;
+        .compass {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            margin: 2rem auto;
+        }
+
+        .arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-style: solid;
+            border-width: 30px 20px 0 20px;
+            border-color: red transparent transparent transparent;
+            z-index: 1;
+        }
+
+        .compass-circle {
+            position: absolute;
+            width: 90%;
+            height: 90%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: url(https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Compass_Rose_Fixed.svg/1024px-Compass_Rose_Fixed.svg.png) center no-repeat;
+            background-size: contain;
+            transition: transform 0.1s ease-out;
         }
 
         button {
             padding: 1rem 2rem;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        #heading-value {
             font-size: 1.2rem;
             margin-top: 1rem;
-            cursor: pointer;
-        }
-
-        #heading {
-            font-size: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        #direction {
-            font-size: 1.3rem;
-            margin-top: 0.5rem;
-        }
-
-        #compass {
-            margin-top: 2rem;
-        }
-
-        #arrow {
-            width: 100px;
-            height: 100px;
-            transition: transform 0.3s ease;
-        }
-
-        p.note {
-            margin-top: 2rem;
-            font-size: 0.95rem;
-            color: #666;
         }
     </style>
 </head>
 
 <body>
-    <h1>🧭 Calibrate Your Heading</h1>
-    <p>Point your phone toward true North, then double-tap to calibrate.</p>
+    <h1>🧭 Calibrate Heading</h1>
+    <p>Point your phone North, then tap "Calibrate".</p>
 
-    <button id="calibrate-btn">Tap to Enable Compass<br><small>(Double-tap to Calibrate & Enter AR)</small></button>
-
-    <p id="heading">Current Heading: ...</p>
-    <p id="direction">Direction: ...</p>
-
-    <div id="compass">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Red_Arrow_Direction.svg/1024px-Red_Arrow_Direction.svg.png"
-            alt="Compass Arrow" id="arrow" />
+    <div class="compass">
+        <div class="arrow"></div>
+        <div class="compass-circle" id="compass-circle"></div>
     </div>
 
-    <p class="note">This uses your phone's magnetic compass. You may need to rotate your phone in a figure-8 motion to
-        calibrate it.</p>
+    <p id="heading-value">Heading: ...</p>
+    <button id="start-btn">Start Compass</button>
+    <button id="calibrate-btn">Calibrate & Enter AR</button>
 
     <script>
-        const headingDisplay = document.getElementById('heading');
-        const directionDisplay = document.getElementById('direction');
-        const arrow = document.getElementById('arrow');
-        const button = document.getElementById('calibrate-btn');
+        const compassCircle = document.getElementById("compass-circle");
+        const headingValue = document.getElementById("heading-value");
+        const startBtn = document.getElementById("start-btn");
+        const calibrateBtn = document.getElementById("calibrate-btn");
 
         let currentHeading = 0;
-        let compassStarted = false;
 
-        // Map degrees to compass direction
-        function getCardinalDirection(angle) {
-            const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-            const index = Math.round(angle / 45) % 8;
-            return directions[index];
-        }
-
-        // Start compass
         function startCompass() {
-            if (compassStarted) return;
-            compassStarted = true;
-
-            window.addEventListener('deviceorientationabsolute', (event) => {
-                if (event.alpha !== null) {
-                    currentHeading = 360 - event.alpha; // Adjust for compass direction
-                    headingDisplay.textContent = `Current Heading: ${Math.round(currentHeading)}°`;
-                    directionDisplay.textContent = `Direction: ${getCardinalDirection(currentHeading)}`;
-                    arrow.style.transform = `rotate(${currentHeading}deg)`;
-                } else {
-                    headingDisplay.textContent = "Compass data not available.";
-                }
-            }, true);
+            if (typeof DeviceOrientationEvent.requestPermission === "function") {
+                DeviceOrientationEvent.requestPermission()
+                    .then(response => {
+                        if (response === "granted") {
+                            window.addEventListener("deviceorientation", onCompass, true);
+                        } else {
+                            alert("Compass access denied.");
+                        }
+                    })
+                    .catch(() => alert("Compass not supported."));
+            } else {
+                // Android and other devices
+                window.addEventListener("deviceorientationabsolute", onCompass, true);
+                window.addEventListener("deviceorientation", onCompass, true);
+            }
         }
 
-        // iOS needs permission to access orientation
-        button.addEventListener('click', async () => {
-            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                try {
-                    const permission = await DeviceOrientationEvent.requestPermission();
-                    if (permission === 'granted') {
-                        startCompass();
-                    } else {
-                        alert("Permission denied. Cannot access compass.");
-                    }
-                } catch (err) {
-                    alert("Error requesting permission: " + err);
-                }
-            } else {
-                // Android or already allowed
-                startCompass();
+        function onCompass(event) {
+            let heading = event.webkitCompassHeading || (360 - event.alpha);
+            if (heading !== undefined) {
+                currentHeading = heading;
+                headingValue.textContent = `Heading: ${Math.round(heading)}°`;
+                compassCircle.style.transform = `translate(-50%, -50%) rotate(${-heading}deg)`;
             }
-        });
+        }
 
-        // Double tap to calibrate & save offset
-        button.addEventListener('dblclick', () => {
+        calibrateBtn.addEventListener("click", () => {
             const offset = (360 - currentHeading + 360) % 360;
             localStorage.setItem('calibrationOffset', offset);
-            window.location.href = 'ar.html';
+            window.location.href = "ar.html";
         });
+
+        startBtn.addEventListener("click", startCompass);
     </script>
 </body>
 

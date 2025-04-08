@@ -126,13 +126,13 @@ function parseCSV(csvText) {
 
 function getAdjustedHeight(h) {
   const mapping = {
-    0.5: 0.2,
-    1: 0.36,
-    1.5: 0.52,
-    2: 0.69,
-    2.5: 0.85,
-    3: 1.01,
-    4.5: 1.5
+    0.5: 0,
+    1: 0.1,
+    1.5: 0.2,
+    2: 0.4,
+    2.5: 0.6,
+    3: 0.9,
+    4.5: 1.3
   };
   return mapping[h] || 0.5; 
 }

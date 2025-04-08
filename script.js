@@ -107,7 +107,7 @@ function parseCSV(csvText) {
   return rows
     .map(row => {
       const columns = row.split(",");
-      while (columns.length < 9) columns.push("");
+      while (columns.length < 10) columns.push("");
       return {
         s_id: columns[0]?.trim(),
         cname1: columns[1]?.trim() || "Unknown",

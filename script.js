@@ -75,7 +75,8 @@ window.onload = () => {
           marker.setAttribute("scale", "1 1 1");
           marker.setAttribute("material", "color: blue");
           marker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
-          marker.setAttribute("position", "0 0 0");
+          const yHeight = getAdjustedHeight(plant.height);
+          marker.setAttribute("position", `0 ${yHeight} 0`);
           marker.setAttribute("class", "clickable");
 
           marker.addEventListener("click", () => {
@@ -116,11 +117,26 @@ function parseCSV(csvText) {
         species: columns[5]?.trim() || "",
         cultivar: columns[6]?.trim() || "",
         lon: parseFloat(columns[7]) || 0,
-        lat: parseFloat(columns[8]) || 0
+        lat: parseFloat(columns[8]) || 0,
+        height: parseFloat(columns[9]) || 1
       };
     })
     .filter(p => p.s_id && p.lat !== 0 && p.lon !== 0);
 }
+
+function getAdjustedHeight(h) {
+  const mapping = {
+    0.5: 0.2,
+    1: 0.36,
+    1.5: 0.52,
+    2: 0.69,
+    2.5: 0.85,
+    3: 1.01,
+    4.5: 1.5
+  };
+  return mapping[h] || 0.5; 
+}
+
 
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;

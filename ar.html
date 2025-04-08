@@ -52,8 +52,7 @@
     <a-scene vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false"
         renderer="antialias: true; alpha: true">
         <a-entity cursor="rayOrigin: mouse"></a-entity>
-        <a-camera gps-new-camera="gpsMinDistance: 1; rotate: true;"></a-camera>
-
+        <a-camera gps-new-camera></a-camera>
     </a-scene>
 
     <div id="info-container">
@@ -70,13 +69,11 @@
     <script>
         const camera = document.querySelector('[gps-new-camera]');
         const offset = parseFloat(localStorage.getItem('calibrationOffset') || '0');
-        // camera.setAttribute('gps-new-camera', {
-        //     gpsMinDistance: 5,
-        //     rotate: true,
-        //     rotationOffset: offset
-        // });
-        camera.setAttribute('gps-new-camera', 'rotationOffset', offset);
-
+        camera.setAttribute('gps-new-camera', {
+            gpsMinDistance: 5,
+            rotate: true,
+            rotationOffset: offset
+        });
         console.log('✅ Applied rotationOffset from calibration:', offset);
 
         // ✅ Optional: Force layout reflow after a short delay

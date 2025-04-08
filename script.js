@@ -31,8 +31,8 @@ window.onload = () => {
     },
     {
       enableHighAccuracy: true,
-      maximumAge: 0,
-      timeout: 10000
+      maximumAge: 1000,
+      timeout: 5000
     }
   );
 

@@ -52,7 +52,8 @@
     <a-scene vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false"
         renderer="antialias: true; alpha: true">
         <a-entity cursor="rayOrigin: mouse"></a-entity>
-        <a-camera gps-new-camera></a-camera>
+        <a-camera gps-new-camera="gpsMinDistance: 1; rotate: true;"></a-camera>
+
     </a-scene>
 
     <div id="info-container">

@@ -70,11 +70,13 @@
     <script>
         const camera = document.querySelector('[gps-new-camera]');
         const offset = parseFloat(localStorage.getItem('calibrationOffset') || '0');
-        camera.setAttribute('gps-new-camera', {
-            gpsMinDistance: 5,
-            rotate: true,
-            rotationOffset: offset
-        });
+        // camera.setAttribute('gps-new-camera', {
+        //     gpsMinDistance: 5,
+        //     rotate: true,
+        //     rotationOffset: offset
+        // });
+        camera.setAttribute('gps-new-camera', 'rotationOffset', offset);
+
         console.log('✅ Applied rotationOffset from calibration:', offset);
 
         // ✅ Optional: Force layout reflow after a short delay

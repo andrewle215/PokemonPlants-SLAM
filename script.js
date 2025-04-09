@@ -8,11 +8,11 @@ window.onload = () => {
   const headingDisplay = document.getElementById('heading');
   const plantList = document.getElementById('plant-list');
   const selectedPlantInfo = document.getElementById('selected-plant-info');
-  const debugInfo = document.getElementById('debug-info');
+//   const debugInfo = document.getElementById('debug-info');
 
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const offset = isIOS ? 270 : 0;
-  debugInfo.textContent = `Offset applied: ${offset}° (${isIOS ? 'iOS' : 'Default'})`;
+//   const offset = isIOS ? 270 : 0;
+//   debugInfo.textContent = `Offset applied: ${offset}° (${isIOS ? 'iOS' : 'Default'})`;
 
   // 🎯 Heading tracker
   scene.addEventListener('loaded', () => {

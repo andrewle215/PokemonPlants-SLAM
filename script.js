@@ -1,6 +1,4 @@
 window.onload = () => {
-  let userLat = null;
-  let userLon = null;
   let userMarker = null;
   let blueMarkers = [];
 
@@ -11,7 +9,7 @@ window.onload = () => {
   const plantList = document.getElementById('plant-list');
   const selectedPlantInfo = document.getElementById('selected-plant-info');
 
-  // Heading display
+  // 🎯 Heading tracker
   scene.addEventListener('loaded', () => {
     scene.addEventListener('frame', () => {
       const rotation = camera.getAttribute('rotation');
@@ -19,30 +17,14 @@ window.onload = () => {
     });
   });
 
-  // Watch GPS position continuously
-  navigator.geolocation.watchPosition(
-    (pos) => {
-      userLat = pos.coords.latitude;
-      userLon = pos.coords.longitude;
-    },
-    (err) => {
-      console.error("GPS Error:", err);
-      userLocation.textContent = "GPS error";
-    },
-    {
-      enableHighAccuracy: true,
-      maximumAge: 1000,
-      timeout: 5000
-    }
-  );
-
-  // Run this every 3 seconds
-  setInterval(() => {
-    if (!userLat || !userLon) return;
+  // 📍 Main update logic: only when user moves ~5m
+  camera.addEventListener("gps-camera-update-position", (e) => {
+    const userLat = e.detail.position.latitude;
+    const userLon = e.detail.position.longitude;
 
     userLocation.textContent = `Lat: ${userLat}, Lon: ${userLon}`;
 
-    // 🔴 Red user marker
+    // 🔴 Red marker (user)
     if (!userMarker) {
       userMarker = document.createElement("a-box");
       userMarker.setAttribute("scale", "1 1 1");
@@ -55,7 +37,7 @@ window.onload = () => {
     blueMarkers.forEach(marker => scene.removeChild(marker));
     blueMarkers = [];
 
-    // 🔵 Load + filter nearest plants
+    // 📦 Load plant data
     fetch("./ABG.csv")
       .then(response => response.text())
       .then(csvText => {
@@ -68,16 +50,17 @@ window.onload = () => {
           .sort((a, b) => a.distance - b.distance)
           .slice(0, 10);
 
-        // Update UI list
+        // 🔄 Update list + scene
         plantList.innerHTML = "";
+
         plants.forEach(plant => {
           const marker = document.createElement("a-box");
-          marker.setAttribute("scale", "1 1 1");
+
+          const heightScale = getAdjustedHeight(plant.height);
+          marker.setAttribute("scale", `1 ${heightScale} 1`);
+          marker.setAttribute("position", "0 0 0");
           marker.setAttribute("material", "color: blue");
           marker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
-          const yHeight = getAdjustedHeight(plant.height);
-          marker.setAttribute("position", `0 ${yHeight} 0`);
-          marker.setAttribute("scale", `1 ${heightScale} 1`);
           marker.setAttribute("class", "clickable");
 
           marker.addEventListener("click", () => {
@@ -98,7 +81,7 @@ window.onload = () => {
         });
       })
       .catch(err => console.error("CSV load error:", err));
-  }, 3000); // every 3 seconds
+  });
 };
 
 // --- Helpers ---
@@ -135,9 +118,9 @@ function getAdjustedHeight(h) {
     3: 0.9,
     4.5: 1.3
   };
-  return mapping[h] || 0.5; 
+  const rounded = Math.round(h * 10) / 10;
+  return mapping[rounded] || 0.4;
 }
-
 
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371e3;
@@ -146,9 +129,10 @@ function getDistance(lat1, lon1, lat2, lon2) {
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-  const a = Math.sin(Δφ / 2) ** 2 +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ / 2) ** 2;
+  const a =
+    Math.sin(Δφ / 2) ** 2 +
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) ** 2;
 
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }

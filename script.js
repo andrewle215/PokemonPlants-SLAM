@@ -76,7 +76,7 @@ window.onload = () => {
           marker.setAttribute("material", "color: blue");
           marker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
           const yHeight = getAdjustedHeight(plant.height);
-          marker.setAttribute("position", "0 0 0");
+          marker.setAttribute("position", `0 ${yHeight} 0`);
           marker.setAttribute("scale", `1 ${heightScale} 1`);
           marker.setAttribute("class", "clickable");
 

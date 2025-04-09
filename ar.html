@@ -60,7 +60,8 @@
         <p id="user-location">Fetching location...</p>
         <p id="heading">Heading: ...</p>
         <p id="selected-plant-info">Tap a blue plant marker to see details here</p>
-
+        
+        <p id="debug-info"> Debug Info Below</p>
         <ol id="plant-list">Closest plants</ol>
 
     </div>
@@ -69,13 +70,11 @@
     <script>
         const camera = document.querySelector('[gps-new-camera]');
         const offset = parseFloat(localStorage.getItem('calibrationOffset') || '0');
-        console.log("📏 Offset from localStorage:", offset);
         camera.setAttribute('gps-new-camera', {
             gpsMinDistance: 5,
             rotate: true,
             rotationOffset: offset
         });
-        console.log('✅ Applied rotationOffset from calibration:', offset);
 
         // ✅ Optional: Force layout reflow after a short delay
         setTimeout(() => {
@@ -83,9 +82,9 @@
             console.log('🔁 Forced layout resize');
         }, 500);
 
-        <p id="debug-info">Debug loading...</p>
-        const debugInfo = document.getElementById('debug-info');
-        debugInfo.textContent = `Offset: ${offset} | Heading: ${rotation.y}`;
+        // const debugInfo = document.getElementById('debug-info');
+        // debugInfo.textContent = `Offset: ${offset}°`;
+        
     </script>
 
     

@@ -9,6 +9,11 @@ window.onload = () => {
   const plantList = document.getElementById('plant-list');
   const selectedPlantInfo = document.getElementById('selected-plant-info');
 
+  const offset = parseFloat(localStorage.getItem('calibrationOffset') || '0');
+  const debugInfo = document.getElementById('debug-info');
+  debugInfo.textContent = `Offset loaded: ${offset}°`;
+  debugInfo.innerHTML = `${offset}`;
+
   // 🎯 Heading tracker
   scene.addEventListener('loaded', () => {
     scene.addEventListener('frame', () => {

@@ -8,11 +8,11 @@ window.onload = () => {
   const headingDisplay = document.getElementById('heading');
   const plantList = document.getElementById('plant-list');
   const selectedPlantInfo = document.getElementById('selected-plant-info');
-//   const debugInfo = document.getElementById('debug-info');
 
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-//   const offset = isIOS ? 270 : 0;
-//   debugInfo.textContent = `Offset applied: ${offset}° (${isIOS ? 'iOS' : 'Default'})`;
+  const offset = parseFloat(localStorage.getItem('calibrationOffset') || '0');
+  const debugInfo = document.getElementById('debug-info');
+  debugInfo.textContent = `Offset loaded: ${offset}°`;
+  debugInfo.innerHTML = `${offset}`;
 
   // 🎯 Heading tracker
   scene.addEventListener('loaded', () => {
@@ -60,8 +60,8 @@ window.onload = () => {
 
         plants.forEach(plant => {
           const marker = document.createElement("a-box");
-          const heightScale = getAdjustedHeight(plant.height);
 
+          const heightScale = getAdjustedHeight(plant.height);
           marker.setAttribute("scale", `1 ${heightScale} 1`);
           marker.setAttribute("position", "0 0 0");
           marker.setAttribute("material", "color: blue");
@@ -90,24 +90,27 @@ window.onload = () => {
 };
 
 // --- Helpers ---
+
 function parseCSV(csvText) {
   const rows = csvText.split("\n").slice(1);
-  return rows.map(row => {
-    const columns = row.split(",");
-    while (columns.length < 10) columns.push("");
-    return {
-      s_id: columns[0]?.trim(),
-      cname1: columns[1]?.trim() || "Unknown",
-      cname2: columns[2]?.trim() || "",
-      cname3: columns[3]?.trim() || "",
-      genus: columns[4]?.trim() || "Unknown",
-      species: columns[5]?.trim() || "",
-      cultivar: columns[6]?.trim() || "",
-      lon: parseFloat(columns[7]) || 0,
-      lat: parseFloat(columns[8]) || 0,
-      height: parseFloat(columns[9]) || 1
-    };
-  }).filter(p => p.s_id && p.lat !== 0 && p.lon !== 0);
+  return rows
+    .map(row => {
+      const columns = row.split(",");
+      while (columns.length < 10) columns.push("");
+      return {
+        s_id: columns[0]?.trim(),
+        cname1: columns[1]?.trim() || "Unknown",
+        cname2: columns[2]?.trim() || "",
+        cname3: columns[3]?.trim() || "",
+        genus: columns[4]?.trim() || "Unknown",
+        species: columns[5]?.trim() || "",
+        cultivar: columns[6]?.trim() || "",
+        lon: parseFloat(columns[7]) || 0,
+        lat: parseFloat(columns[8]) || 0,
+        height: parseFloat(columns[9]) || 1
+      };
+    })
+    .filter(p => p.s_id && p.lat !== 0 && p.lon !== 0);
 }
 
 function getAdjustedHeight(h) {
@@ -130,6 +133,11 @@ function getDistance(lat1, lon1, lat2, lon2) {
   const φ2 = (lat2 * Math.PI) / 180;
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+
+  const a =
+    Math.sin(Δφ / 2) ** 2 +
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) ** 2;
+
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }

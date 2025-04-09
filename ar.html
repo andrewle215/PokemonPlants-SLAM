@@ -69,6 +69,7 @@
     <script>
         const camera = document.querySelector('[gps-new-camera]');
         const offset = parseFloat(localStorage.getItem('calibrationOffset') || '0');
+        console.log("📏 Offset from localStorage:", offset);
         camera.setAttribute('gps-new-camera', {
             gpsMinDistance: 5,
             rotate: true,
@@ -81,7 +82,14 @@
             window.dispatchEvent(new Event('resize'));
             console.log('🔁 Forced layout resize');
         }, 500);
+
+        <p id="debug-info">Debug loading...</p>
+        const debugInfo = document.getElementById('debug-info');
+        debugInfo.textContent = `Offset: ${offset} | Heading: ${rotation.y}`;
     </script>
+
+    
+
 </body>
 
 </html>

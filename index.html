@@ -59,14 +59,14 @@
         <p id="user-location">Fetching location...</p>
         <p id="heading">Heading: ...</p>
         <p id="selected-plant-info">Tap a blue plant marker to see details here</p>
-        <p id="debug-info">Debug info... 0</p> 
+        <p id="debug-info">Debug info... 300</p> 
         <ol id="plant-list">Closest plants</ol>
     </div>
 
     <script>
         const camera = document.querySelector('[gps-new-camera]');
         const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const offset = isIOS ? 0 : 0;
+        const offset = isIOS ? 300 : 0;
 
         camera.setAttribute('gps-new-camera', {
             gpsMinDistance: 5,

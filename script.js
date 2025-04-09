@@ -11,7 +11,7 @@ window.onload = () => {
   const debugInfo = document.getElementById('debug-info');
 
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const offset = isIOS ? 180 : 0;
+  const offset = isIOS ? 270 : 0;
   debugInfo.textContent = `Offset applied: ${offset}° (${isIOS ? 'iOS' : 'Default'})`;
 
   // 🎯 Heading tracker

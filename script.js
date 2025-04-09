@@ -74,6 +74,7 @@ window.onload = () => {
               Genus: ${plant.genus || "N/A"}<br>
               Species: ${plant.species || "N/A"}<br>
               Distance: ${plant.distance.toFixed(1)} meters
+              Height: ${plant.height || "N/A"}
             `;
           });
 
@@ -81,7 +82,7 @@ window.onload = () => {
           blueMarkers.push(marker);
 
           const listItem = document.createElement("li");
-          listItem.innerText = `${plant.cname1 || "N/A"} - Genus: ${plant.genus}, Species: ${plant.species} (${plant.distance.toFixed(1)}m)`;
+          listItem.innerText = `Height ${plant.height}, ${plant.cname1 || "N/A"} - Genus: ${plant.genus}, Species: ${plant.species} (${plant.distance.toFixed(1)}m)`;
           plantList.appendChild(listItem);
         });
       })

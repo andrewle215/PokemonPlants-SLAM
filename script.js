@@ -75,7 +75,7 @@ window.onload = () => {
               🌱 <strong>${plant.cname1 || "Unknown"}</strong><br>
               Genus: ${plant.genus || "N/A"}<br>
               Species: ${plant.species || "N/A"}<br>
-              Distance: ${plant.distance.toFixed(1)} meters
+              Distance: ${plant.distance.toFixed(1)} meters<br>
               Height: ${plant.height || "N/A"}
             `;
           });

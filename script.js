@@ -62,8 +62,10 @@ window.onload = () => {
           const marker = document.createElement("a-box");
 
           const heightScale = getAdjustedHeight(plant.height);
+          const yPos = heightScale / 2; // place it so base touches ground
+
           marker.setAttribute("scale", `1 ${heightScale} 1`);
-          marker.setAttribute("position", "0 0 0");
+          marker.setAttribute("position", `0 ${yPos} 0`);
           marker.setAttribute("material", "color: blue");
           marker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
           marker.setAttribute("class", "clickable");

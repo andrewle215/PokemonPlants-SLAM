@@ -195,7 +195,7 @@ window.onload = () => {
   } else if (h >= 3 && h <= 4.5) {
     return './models/Tree.glb';
   } else {
-    return './models/tree_large_model.gltf';
+    return './models/Tree.glb';
   }
 }
 

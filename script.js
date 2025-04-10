@@ -19,35 +19,17 @@ window.addEventListener("load", () => {
   let plantMarkers = {};
 
   const scene = document.querySelector("a-scene");
-  const userLocation = document.getElementById("user-location");
-  const headingDisplay = document.getElementById("heading");
-  // Removed the old debug info container and plant list.
-  // const plantList = document.getElementById("plant-list");
-  // const selectedPlantInfo = document.getElementById("selected-plant-info");
-  const debugInfo = document.getElementById("debug-info");
-
-  // Use the new top info container for displaying only the plant name.
+  // Only the top info container is being used.
   const plantInfoDisplay = document.getElementById("plant-info");
-
-  const calibrationOffset = parseFloat(localStorage.getItem("calibrationOffset") || "0");
-  debugInfo.textContent = `Offset loaded: ${calibrationOffset}°`;
 
   // Throttle marker updates to avoid excessive DOM operations.
   let lastMarkerUpdate = 0;
-  const updateInterval = 10000; // update markers every 10 seconds (adjust as needed)
+  const updateInterval = 10000; // update markers every 10 seconds
 
-  // Track camera heading continuously.
-  scene.addEventListener("loaded", () => {
-    scene.addEventListener("frame", () => {
-      const rotation = camera.getAttribute("rotation");
-      headingDisplay.textContent = `Heading: ${Math.round(rotation.y)}°, Pitch: ${Math.round(rotation.x)}°`;
-    });
-  });
-
+  // Listen for GPS camera updates.
   camera.addEventListener("gps-camera-update-position", (e) => {
     const userLat = e.detail.position.latitude;
     const userLon = e.detail.position.longitude;
-    userLocation.textContent = `Lat: ${userLat}, Lon: ${userLon}`;
 
     // Update or create the red user marker.
     if (!userMarker) {
@@ -58,7 +40,7 @@ window.addEventListener("load", () => {
     }
     userMarker.setAttribute("gps-new-entity-place", `latitude: ${userLat}; longitude: ${userLon}`);
 
-    // Throttle the update of plant markers.
+    // Throttle plant marker updates.
     const now = Date.now();
     if (now - lastMarkerUpdate > updateInterval) {
       lastMarkerUpdate = now;
@@ -77,17 +59,9 @@ window.addEventListener("load", () => {
             ...p,
             distance: getDistance(userLat, userLon, p.lat, p.lon),
           }))
-          .filter((p) => p.distance <= 10) // only include plants within 10 meters.
+          .filter((p) => p.distance <= 10)
           .sort((a, b) => a.distance - b.distance)
           .slice(0, 10);
-
-        // (Optional) If you previously used a plant list for debugging, you can remove it or comment it out.
-        // plantList.innerHTML = "";
-        // plants.forEach((plant) => {
-        //   const listItem = document.createElement("li");
-        //   listItem.innerText = `Height ${plant.height}, ${plant.cname1 || "N/A"} - Genus: ${plant.genus}, Species: ${plant.species} (${plant.distance.toFixed(1)}m)`;
-        //   plantList.appendChild(listItem);
-        // });
 
         // Create or update markers for each plant.
         plants.forEach((plant) => {
@@ -96,8 +70,11 @@ window.addEventListener("load", () => {
           const yPos = heightScale / 2;
 
           if (plantMarkers[plant.s_id]) {
-            // Update existing marker location.
-            plantMarkers[plant.s_id].setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
+            // Update an existing marker's location.
+            plantMarkers[plant.s_id].setAttribute(
+              "gps-new-entity-place",
+              `latitude: ${plant.lat}; longitude: ${plant.lon}`
+            );
           } else {
             // Create an entity to hold a 3D model (GLB file).
             const marker = document.createElement("a-entity");
@@ -105,14 +82,17 @@ window.addEventListener("load", () => {
             marker.setAttribute("scale", "2 2 2");
             marker.setAttribute("position", `0 ${yPos} 0`);
             marker.setAttribute("look-at", "[gps-new-camera]");
-            marker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
+            marker.setAttribute(
+              "gps-new-entity-place",
+              `latitude: ${plant.lat}; longitude: ${plant.lon}`
+            );
             marker.setAttribute("class", "clickable");
 
             // On marker click, display the plant's name at the top.
             marker.addEventListener("click", () => {
               plantInfoDisplay.style.display = "block";
               plantInfoDisplay.textContent = plant.cname1 || "Unknown";
-              // Optionally hide after 3 seconds.
+              // Optionally hide it after 3 seconds.
               setTimeout(() => {
                 plantInfoDisplay.style.display = "none";
               }, 3000);
@@ -123,7 +103,7 @@ window.addEventListener("load", () => {
           }
         });
 
-        // Remove markers that no longer appear in the CSV data.
+        // Remove markers that are no longer in the CSV data.
         for (const id in plantMarkers) {
           if (!plants.find((plant) => plant.s_id === id)) {
             scene.removeChild(plantMarkers[id]);
@@ -154,13 +134,13 @@ window.addEventListener("load", () => {
           cultivar: columns[6]?.trim() || "",
           lon: parseFloat(columns[7]) || 0,
           lat: parseFloat(columns[8]) || 0,
-          height: parseFloat(columns[9]) || 1,
+          height: parseFloat(columns[10]) || 1,
         };
       })
       .filter((p) => p.s_id && p.lat !== 0 && p.lon !== 0);
   }
 
-  // Return an adjusted height value based on a mapping.
+  // Returns an adjusted height based on a mapping.
   function getAdjustedHeight(h) {
     const mapping = {
       0.5: 0.2,
@@ -175,7 +155,7 @@ window.addEventListener("load", () => {
     return mapping[rounded] || 0.4;
   }
 
-  // Calculate the distance in meters between two lat/lon points using the Haversine formula.
+  // Calculate the distance between two lat/lon points using the Haversine formula.
   function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3; // Earth's radius in meters.
     const φ1 = (lat1 * Math.PI) / 180;
@@ -189,7 +169,7 @@ window.addEventListener("load", () => {
   }
 
   // Returns the URL of a GLB model based on the plant's height.
-  // (Ensure these files are in the './models/' folder.)
+  // (Ensure these files are placed in your './models/' folder.)
   function getPolyModelURL(h) {
     if (h <= 1) {
       return "./models/Shrub.glb";

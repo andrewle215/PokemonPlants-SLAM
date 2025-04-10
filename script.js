@@ -28,7 +28,7 @@ window.addEventListener("load", () => {
     const userLat = e.detail.position.latitude;
     const userLon = e.detail.position.longitude;
 
-    // our users marker
+    // the users marker
     if (!userMarker) {
       userMarker = document.createElement("a-box");
       userMarker.setAttribute("scale", "1 1 1");
@@ -42,6 +42,7 @@ window.addEventListener("load", () => {
 
     const now = Date.now();
 
+    
     // how often code is updated
     if (!firstUpdateDone) {
       firstUpdateDone = true; 

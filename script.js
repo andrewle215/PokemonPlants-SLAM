@@ -148,21 +148,21 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 
-
-
-const lower = cname1.toLowerCase();
-if (lower.includes("oak") || lower.includes("maple") || lower.includes("elm") || lower.includes("birch")) {
-  return "./sprites/1f333.png"; // 🌳
-} else if (lower.includes("fern")) {
-  return "./sprites/1f33f.png"; // 🌿
-} else if (lower.includes("grass") || lower.includes("reed")) {
-  return "./sprites/1f33e.png"; // 🌾
-} else if (lower.includes("flower") || lower.includes("rose") || lower.includes("daisy")) {
-  return "./sprites/1f338.png"; // 🌸
-} else if (lower.includes("shrub") || lower.includes("bush") || lower.includes("holly") || lower.includes("boxwood")) {
-  return "./sprites/1f331.png"; // 🌱
-} else if (lower.includes("cactus") || lower.includes("succulent")) {
-  return "./sprites/1f335.png"; // 🌵
-} else {
-  return "./sprites/1fab4.png"; // 🪴 (default potted plant)
+function getEmojiImageURL(cname1) {
+  const lower = cname1.toLowerCase();
+  if (lower.includes("oak") || lower.includes("maple") || lower.includes("elm") || lower.includes("birch")) {
+    return "./sprites/1f333.png"; // 🌳
+  } else if (lower.includes("fern")) {
+    return "./sprites/1f33f.png"; // 🌿
+  } else if (lower.includes("grass") || lower.includes("reed")) {
+    return "./sprites/1f33e.png"; // 🌾
+  } else if (lower.includes("flower") || lower.includes("rose") || lower.includes("daisy")) {
+    return "./sprites/1f338.png"; // 🌸
+  } else if (lower.includes("shrub") || lower.includes("bush") || lower.includes("holly") || lower.includes("boxwood")) {
+    return "./sprites/1f331.png"; // 🌱
+  } else if (lower.includes("cactus") || lower.includes("succulent")) {
+    return "./sprites/1f335.png"; // 🌵
+  } else {
+    return "./sprites/1fab4.png"; // 🪴 (default potted plant)
+  }
 }

@@ -20,7 +20,7 @@ window.addEventListener("load", () => {
   const plantInfoDisplay = document.getElementById("plant-info");
 
   let lastMarkerUpdate = 0;
-  const updateInterval = 5000; 
+  const updateInterval = 2000; 
 
   let firstUpdateDone = false;
 
@@ -65,7 +65,7 @@ window.addEventListener("load", () => {
             ...p,
             distance: getDistance(userLat, userLon, p.lat, p.lon),
           }))
-          .filter((p) => p.distance <= 7)
+          .filter((p) => p.distance <= 10)
           .sort((a, b) => a.distance - b.distance)
           .slice(0, 10);
 

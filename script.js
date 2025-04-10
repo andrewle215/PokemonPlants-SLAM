@@ -57,14 +57,19 @@ window.onload = () => {
         plantList.innerHTML = "";
 
         plants.forEach(plant => {
-          const marker = document.createElement("a-box");
 
           const heightScale = getAdjustedHeight(plant.height);
           const yPos = heightScale / 2;
 
-          marker.setAttribute("scale", `1 ${heightScale} 1`);
+          const marker = document.createElement("a-text");
+          marker.setAttribute("value", getEmojiForPlant(plant.cname1));
+          marker.setAttribute("scale", "2 2 2");
           marker.setAttribute("position", `0 ${yPos} 0`);
-          marker.setAttribute("material", "color: blue");
+          marker.setAttribute("align", "center");
+          marker.setAttribute("look-at", "[gps-new-camera]");
+
+
+          
           marker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
           marker.setAttribute("class", "clickable");
 
@@ -137,4 +142,24 @@ function getDistance(lat1, lon1, lat2, lon2) {
             Math.sin(Δλ / 2) ** 2;
 
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+
+function getEmojiForPlant(cname1) {
+  const lower = cname1.toLowerCase();
+  if (lower.includes("oak") || lower.includes("maple") || lower.includes("elm") || lower.includes("birch")) {
+    return "🌳"; // Tree
+  } else if (lower.includes("fern")) {
+    return "🌿"; // Fern
+  } else if (lower.includes("grass") || lower.includes("reed")) {
+    return "🌾"; // Grass
+  } else if (lower.includes("flower") || lower.includes("rose") || lower.includes("daisy")) {
+    return "🌸"; // Flower
+  } else if (lower.includes("shrub") || lower.includes("bush") || lower.includes("holly") || lower.includes("boxwood")) {
+    return "🌱"; // Shrub
+  } else if (lower.includes("cactus") || lower.includes("succulent")) {
+    return "🌵"; // Succulent
+  } else {
+    return "🪴"; // Default potted plant
+  }
 }

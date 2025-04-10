@@ -96,7 +96,10 @@ window.addEventListener("load", () => {
             plantInfoDisplay.style.display = "block";
             plantInfoDisplay.innerHTML = `
                 <div style="font-size: 1em; font-weight: bold;">
-                Common Name: ${plant.cname2 ? plant.cname2 + ", " : ""}${plant.cname1 || ""}
+                Common Name:
+                </div>
+                <div style = "font-size: 0.7em;">
+                ${plant.cname2 ? plant.cname2 + ", " : ""}${plant.cname1 || ""}
                 </div>
                 <div style="font-size: 0.5em;">
                 Genus: ${plant.genus || "N/A"} &nbsp;&nbsp; Species: ${plant.species || "N/A"}

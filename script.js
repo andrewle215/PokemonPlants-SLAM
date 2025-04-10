@@ -62,11 +62,11 @@ window.onload = () => {
           const yPos = heightScale / 2;
 
          const marker = document.createElement("a-image");
-            marker.setAttribute("src", getEmojiImageURL(plant.cname1));
-            marker.setAttribute("scale", "2 2 2");
-            marker.setAttribute("position", `0 ${yPos} 0`);
-            marker.setAttribute("look-at", "[gps-new-camera]");
-            marker.setAttribute("material", "transparent: true");
+        marker.setAttribute("src", getEmojiImageURL(plant.cname1));
+        marker.setAttribute("scale", "2 2 2");
+        marker.setAttribute("position", `0 ${yPos} 0`);
+        marker.setAttribute("material", "transparent: true");
+        marker.setAttribute("look-at", "[gps-new-camera]");
 
 
 
@@ -148,24 +148,21 @@ function getDistance(lat1, lon1, lat2, lon2) {
 }
 
 
-function getEmojiImageURL(cname1) {
-//   const lower = cname1.toLowerCase();
-//   if (lower.includes("oak") || lower.includes("maple") || lower.includes("elm") || lower.includes("birch")) {
-//     return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f333.png"; // 🌳
-//   } else if (lower.includes("fern")) {
-//     return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f33f.png"; // 🌿
-//   } else if (lower.includes("grass") || lower.includes("reed")) {
-//     return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f33e.png"; // 🌾
-//   } else if (lower.includes("flower") || lower.includes("rose") || lower.includes("daisy")) {
-//     return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f338.png"; // 🌸
-//   } else if (lower.includes("shrub") || lower.includes("bush") || lower.includes("holly") || lower.includes("boxwood")) {
-//     return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f331.png"; // 🌱
-//   } else if (lower.includes("cactus") || lower.includes("succulent")) {
-//     return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f335.png"; // 🌵
-//   } else {
-//     return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1fab4.png"; // 🪴
-//   }
-return "./sprites/1f333.png";
+
+
+const lower = cname1.toLowerCase();
+if (lower.includes("oak") || lower.includes("maple") || lower.includes("elm") || lower.includes("birch")) {
+  return "./sprites/1f333.png"; // 🌳
+} else if (lower.includes("fern")) {
+  return "./sprites/1f33f.png"; // 🌿
+} else if (lower.includes("grass") || lower.includes("reed")) {
+  return "./sprites/1f33e.png"; // 🌾
+} else if (lower.includes("flower") || lower.includes("rose") || lower.includes("daisy")) {
+  return "./sprites/1f338.png"; // 🌸
+} else if (lower.includes("shrub") || lower.includes("bush") || lower.includes("holly") || lower.includes("boxwood")) {
+  return "./sprites/1f331.png"; // 🌱
+} else if (lower.includes("cactus") || lower.includes("succulent")) {
+  return "./sprites/1f335.png"; // 🌵
+} else {
+  return "./sprites/1fab4.png"; // 🪴 (default potted plant)
 }
-
-

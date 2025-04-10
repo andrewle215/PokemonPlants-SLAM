@@ -50,11 +50,6 @@
 <body>
     <a-scene vr-mode-ui="enabled: false" arjs="sourceType: webcam; debugUIEnabled: false"
         renderer="antialias: true; alpha: true">
-        <!-- Preload your 3D assets -->
-        <a-assets>
-            <a-asset-item id="treeModel" src="./models/tree_model.gltf"></a-asset-item>
-        </a-assets>
-
         <a-entity cursor="rayOrigin: mouse"></a-entity>
         <a-camera gps-new-camera></a-camera>
     </a-scene>
@@ -63,7 +58,7 @@
         <p>Plants V2 🌺</p>
         <p id="user-location">Fetching location...</p>
         <p id="heading">Heading: ...</p>
-        <p id="selected-plant-info">Tap a marker to see details here</p>
+        <p id="selected-plant-info">Tap a blue plant marker to see details here</p>
         <p id="debug-info"> Debug Info Below</p>
         <ol id="plant-list">Closest plants</ol>
     </div>

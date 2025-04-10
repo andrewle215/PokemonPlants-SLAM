@@ -1,5 +1,5 @@
 window.addEventListener("load", () => {
-  // Set up the camera offset.
+  // offset of camera is set up here
   const camera = document.querySelector("[gps-new-camera]");
   const offset = parseFloat(localStorage.getItem("calibrationOffset") || "0");
   camera.setAttribute("gps-new-camera", {
@@ -20,16 +20,15 @@ window.addEventListener("load", () => {
   const plantInfoDisplay = document.getElementById("plant-info");
 
   let lastMarkerUpdate = 0;
-  const updateInterval = 7000; // subsequent updates every 10 seconds
+  const updateInterval = 7000; 
 
-  // We'll track if we've done an immediate update yet.
   let firstUpdateDone = false;
 
   camera.addEventListener("gps-camera-update-position", (e) => {
     const userLat = e.detail.position.latitude;
     const userLon = e.detail.position.longitude;
 
-    // Update or create the red user marker.
+    // our users marker
     if (!userMarker) {
       userMarker = document.createElement("a-box");
       userMarker.setAttribute("scale", "1 1 1");
@@ -43,13 +42,13 @@ window.addEventListener("load", () => {
 
     const now = Date.now();
 
-    // If we've never updated before, do an immediate update.
+    // how often code is updated
     if (!firstUpdateDone) {
-      firstUpdateDone = true; // Mark that we've done the initial update
-      lastMarkerUpdate = now; // Record the time so future updates track from here
+      firstUpdateDone = true; 
+      lastMarkerUpdate = now; 
       updatePlantMarkers(userLat, userLon);
     } else {
-      // For subsequent updates, apply the 10-second throttle
+      
       if (now - lastMarkerUpdate > updateInterval) {
         lastMarkerUpdate = now;
         updatePlantMarkers(userLat, userLon);
@@ -91,7 +90,7 @@ window.addEventListener("load", () => {
             );
             marker.setAttribute("class", "clickable");
 
-            // On marker click, display info
+            // displays the info
             marker.addEventListener("click", () => {
               plantInfoDisplay.style.display = "block";
               plantInfoDisplay.innerHTML = `
@@ -106,7 +105,7 @@ window.addEventListener("load", () => {
                   Species: ${plant.species || "N/A"}
                 </div>
               `;
-              // Hide after 3 seconds
+              // hides the display
               setTimeout(() => {
                 plantInfoDisplay.style.display = "none";
               }, 3000);
@@ -117,7 +116,7 @@ window.addEventListener("load", () => {
           }
         });
 
-        // Remove old markers
+        // Remove and updates markers
         for (const id in plantMarkers) {
           if (!plants.find((p) => p.s_id === id)) {
             scene.removeChild(plantMarkers[id]);
@@ -128,7 +127,6 @@ window.addEventListener("load", () => {
       .catch((err) => console.error("CSV load error:", err));
   }
 
-  // --- Helper Functions ---
   function parseCSV(csvText) {
     const rows = csvText.split("\n").slice(1);
     return rows

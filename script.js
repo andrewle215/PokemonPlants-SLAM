@@ -19,7 +19,7 @@ window.addEventListener("load", () => {
   let plantMarkers = {};
 
   const scene = document.querySelector("a-scene");
-  // Only the top info container is being used.
+  // Use the new top info container for displaying only the plant name.
   const plantInfoDisplay = document.getElementById("plant-info");
 
   // Throttle marker updates to avoid excessive DOM operations.
@@ -38,7 +38,10 @@ window.addEventListener("load", () => {
       userMarker.setAttribute("material", "color: red");
       scene.appendChild(userMarker);
     }
-    userMarker.setAttribute("gps-new-entity-place", `latitude: ${userLat}; longitude: ${userLon}`);
+    userMarker.setAttribute(
+      "gps-new-entity-place",
+      `latitude: ${userLat}; longitude: ${userLon}`
+    );
 
     // Throttle plant marker updates.
     const now = Date.now();
@@ -103,7 +106,7 @@ window.addEventListener("load", () => {
           }
         });
 
-        // Remove markers that are no longer in the CSV data.
+        // Remove markers that no longer appear in the CSV data.
         for (const id in plantMarkers) {
           if (!plants.find((plant) => plant.s_id === id)) {
             scene.removeChild(plantMarkers[id]);
@@ -122,8 +125,8 @@ window.addEventListener("load", () => {
     return rows
       .map((row) => {
         const columns = row.split(",");
-        // Ensure there are at least 10 columns.
-        while (columns.length < 10) columns.push("");
+        // Ensure there are at least 11 columns (indices 0–10).
+        while (columns.length < 11) columns.push("");
         return {
           s_id: columns[0]?.trim(),
           cname1: columns[1]?.trim() || "Unknown",
@@ -134,7 +137,7 @@ window.addEventListener("load", () => {
           cultivar: columns[6]?.trim() || "",
           lon: parseFloat(columns[7]) || 0,
           lat: parseFloat(columns[8]) || 0,
-          height: parseFloat(columns[10]) || 1,
+          height: parseFloat(columns[10]) || 1, // Height is in index 10.
         };
       })
       .filter((p) => p.s_id && p.lat !== 0 && p.lon !== 0);
@@ -169,7 +172,7 @@ window.addEventListener("load", () => {
   }
 
   // Returns the URL of a GLB model based on the plant's height.
-  // (Ensure these files are placed in your './models/' folder.)
+  // (Ensure these files are placed in your "./models/" folder.)
   function getPolyModelURL(h) {
     if (h <= 1) {
       return "./models/Shrub.glb";

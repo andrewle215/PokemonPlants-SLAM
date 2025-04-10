@@ -95,10 +95,10 @@ window.addEventListener("load", () => {
             marker.addEventListener("click", () => {
             plantInfoDisplay.style.display = "block";
             plantInfoDisplay.innerHTML = `
-                <div style="font-size: 2em; font-weight: bold;">
-                Common Name: ${plant.cname2 ? plant.cname2 + ", " : ""}${plant.cname1 || "Unknown"}
+                <div style="font-size: 1em; font-weight: bold;">
+                Common Name: ${plant.cname2 ? plant.cname2 + ", " : ""}${plant.cname1 || ""}
                 </div>
-                <div style="font-size: 1em;">
+                <div style="font-size: 0.5em;">
                 Genus: ${plant.genus || "N/A"} &nbsp;&nbsp; Species: ${plant.species || "N/A"}
                 </div>
             `;

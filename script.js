@@ -63,7 +63,7 @@ window.onload = () => {
 
          const marker = document.createElement("a-image");
         marker.setAttribute("src", getEmojiImageURL(plant.cname1));
-        marker.setAttribute("scale", "2 2 2");
+        marker.setAttribute("scale", "1 1 1");
         marker.setAttribute("position", `0 ${yPos} 0`);
         marker.setAttribute("material", "transparent: true");
         marker.setAttribute("look-at", "[gps-new-camera]");

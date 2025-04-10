@@ -1,50 +1,54 @@
 <script>
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (!isIOS) {
-        window.location.href = "ar.html";
-    }
+    document.addEventListener("DOMContentLoaded", () => {
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    const compassImg = document.getElementById("compass-img");
-    const headingDisplay = document.getElementById("heading-value");
-    const startBtn = document.getElementById("start-btn");
-    const calibrateBtn = document.getElementById("calibrate-btn");
-
-    let currentHeading = 0;
-
-    function startCompass() {
-        if (typeof DeviceOrientationEvent.requestPermission === "function") {
-            DeviceOrientationEvent.requestPermission()
-                .then(permission => {
-                    if (permission === "granted") {
-                        window.addEventListener("deviceorientation", handleOrientation, true);
-                    } else {
-                        alert("Compass access denied.");
-                    }
-                })
-                .catch(err => {
-                    alert("Compass not supported.");
-                    console.error(err);
-                });
-        } else {
-            window.addEventListener("deviceorientationabsolute", handleOrientation, true);
-            window.addEventListener("deviceorientation", handleOrientation, true);
+        if (!isIOS) {
+            window.location.href = "ar.html";
         }
-    }
 
-    function handleOrientation(event) {
-        const heading = event.webkitCompassHeading || (360 - event.alpha);
-        if (heading !== undefined && !isNaN(heading)) {
-            currentHeading = heading;
-            headingDisplay.textContent = `Heading: ${Math.round(heading)}°`;
-            compassImg.style.transform = `rotate(${-heading}deg)`;
+        // iOS setup continues here...
+        const compassImg = document.getElementById("compass-img");
+        const headingDisplay = document.getElementById("heading-value");
+        const startBtn = document.getElementById("start-btn");
+        const calibrateBtn = document.getElementById("calibrate-btn");
+
+        let currentHeading = 0;
+
+        function startCompass() {
+            if (typeof DeviceOrientationEvent.requestPermission === "function") {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permission => {
+                        if (permission === "granted") {
+                            window.addEventListener("deviceorientation", handleOrientation, true);
+                        } else {
+                            alert("Compass access denied.");
+                        }
+                    })
+                    .catch(err => {
+                        alert("Compass not supported.");
+                        console.error(err);
+                    });
+            } else {
+                window.addEventListener("deviceorientationabsolute", handleOrientation, true);
+                window.addEventListener("deviceorientation", handleOrientation, true);
+            }
         }
-    }
 
-    startBtn.addEventListener("click", startCompass);
+        function handleOrientation(event) {
+            const heading = event.webkitCompassHeading || (360 - event.alpha);
+            if (heading !== undefined && !isNaN(heading)) {
+                currentHeading = heading;
+                headingDisplay.textContent = `Heading: ${Math.round(heading)}°`;
+                compassImg.style.transform = `rotate(${-heading}deg)`;
+            }
+        }
 
-    calibrateBtn.addEventListener("click", () => {
-        const offset = (360 - currentHeading + 360) % 360;
-        localStorage.setItem("calibrationOffset", offset);
-        window.location.href = "ar.html";
+        startBtn.addEventListener("click", startCompass);
+
+        calibrateBtn.addEventListener("click", () => {
+            const offset = (360 - currentHeading + 360) % 360;
+            localStorage.setItem("calibrationOffset", offset);
+            window.location.href = "ar.html";
+        });
     });
 </script>

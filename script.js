@@ -149,19 +149,20 @@ function getDistance(lat1, lon1, lat2, lon2) {
 function getEmojiImageURL(cname1) {
   const lower = cname1.toLowerCase();
   if (lower.includes("oak") || lower.includes("maple") || lower.includes("elm") || lower.includes("birch")) {
-    return "https://twemoji.maxcdn.com/v/latest/72x72/1f333.png"; // 🌳
+    return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f333.png"; // 🌳
   } else if (lower.includes("fern")) {
-    return "https://twemoji.maxcdn.com/v/latest/72x72/1f33f.png"; // 🌿
+    return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f33f.png"; // 🌿
   } else if (lower.includes("grass") || lower.includes("reed")) {
-    return "https://twemoji.maxcdn.com/v/latest/72x72/1f33e.png"; // 🌾
+    return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f33e.png"; // 🌾
   } else if (lower.includes("flower") || lower.includes("rose") || lower.includes("daisy")) {
-    return "https://twemoji.maxcdn.com/v/latest/72x72/1f338.png"; // 🌸
+    return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f338.png"; // 🌸
   } else if (lower.includes("shrub") || lower.includes("bush") || lower.includes("holly") || lower.includes("boxwood")) {
-    return "https://twemoji.maxcdn.com/v/latest/72x72/1f331.png"; // 🌱
+    return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f331.png"; // 🌱
   } else if (lower.includes("cactus") || lower.includes("succulent")) {
-    return "https://twemoji.maxcdn.com/v/latest/72x72/1f335.png"; // 🌵
+    return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1f335.png"; // 🌵
   } else {
-    return "https://twemoji.maxcdn.com/v/latest/72x72/1fab4.png"; // 🪴 default
+    return "https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/1fab4.png"; // 🪴
   }
 }
+
 

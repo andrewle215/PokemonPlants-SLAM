@@ -20,7 +20,7 @@ window.addEventListener("load", () => {
   const plantInfoDisplay = document.getElementById("plant-info");
 
   let lastMarkerUpdate = 0;
-  const updateInterval = 7000; 
+  const updateInterval = 5000; 
 
   let firstUpdateDone = false;
 
@@ -81,7 +81,7 @@ window.addEventListener("load", () => {
           } else {
             const marker = document.createElement("a-entity");
             marker.setAttribute("gltf-model", getPolyModelURL(plant.height));
-            marker.setAttribute("scale", "2 2 2");
+            marker.setAttribute("scale", getScaleFromHeight(plant.height));
             marker.setAttribute("position", `0 ${yPos} 0`);
             marker.setAttribute("look-at", "[gps-new-camera]");
             marker.setAttribute(
@@ -151,13 +151,13 @@ window.addEventListener("load", () => {
 
   function getAdjustedHeight(h) {
     const mapping = {
-      0.5: 0.2,
-      1: 0.3,
-      1.5: 0.45,
-      2: 0.6,
-      2.5: 0.8,
-      3: 1.1,
-      4.5: 1.5,
+      0.5: 0,
+      1: 0.1,
+      1.5: 0.35,
+      2: 0.55,
+      2.5: 0.7,
+      3: 0.9,
+      4.5: 1.2,
     };
     const rounded = Math.round(h * 10) / 10;
     return mapping[rounded] || 0.4;
@@ -188,4 +188,21 @@ window.addEventListener("load", () => {
       return "./models/BigTree.glb";
     }
   }
+
+
+function getScaleFromHeight(h) {
+  if (h <= 1) {
+    return "1 1 1"; 
+  } else if (h > 1 && h <= 1.5) {
+    return "1.1 1.1 1.1"; 
+  } else if (h > 1.5 && h < 3) {
+    return "1.5 1.5 1.5"; 
+  } else if (h >= 3 && h <= 4.5) {
+    return "1.7 1.7 1.7"; 
+  } else {
+    return "2 2 2"; 
+  }
+}
+
+
 });

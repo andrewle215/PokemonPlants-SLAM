@@ -20,7 +20,7 @@ window.addEventListener("load", () => {
   const plantInfoDisplay = document.getElementById("plant-info");
 
   let lastMarkerUpdate = 0;
-  const updateInterval = 10000; // subsequent updates every 10 seconds
+  const updateInterval = 7000; // subsequent updates every 10 seconds
 
   // We'll track if we've done an immediate update yet.
   let firstUpdateDone = false;

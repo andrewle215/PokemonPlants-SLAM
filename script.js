@@ -21,16 +21,20 @@ window.addEventListener("load", () => {
   const scene = document.querySelector("a-scene");
   const userLocation = document.getElementById("user-location");
   const headingDisplay = document.getElementById("heading");
-  const plantList = document.getElementById("plant-list");
-  const selectedPlantInfo = document.getElementById("selected-plant-info");
+  // Removed the old debug info container and plant list.
+  // const plantList = document.getElementById("plant-list");
+  // const selectedPlantInfo = document.getElementById("selected-plant-info");
   const debugInfo = document.getElementById("debug-info");
+
+  // Use the new top info container for displaying only the plant name.
+  const plantInfoDisplay = document.getElementById("plant-info");
 
   const calibrationOffset = parseFloat(localStorage.getItem("calibrationOffset") || "0");
   debugInfo.textContent = `Offset loaded: ${calibrationOffset}°`;
 
   // Throttle marker updates to avoid excessive DOM operations.
   let lastMarkerUpdate = 0;
-  const updateInterval = 10000; // update markers every 3 seconds
+  const updateInterval = 10000; // update markers every 10 seconds (adjust as needed)
 
   // Track camera heading continuously.
   scene.addEventListener("loaded", () => {
@@ -77,15 +81,13 @@ window.addEventListener("load", () => {
           .sort((a, b) => a.distance - b.distance)
           .slice(0, 10);
 
-        // Update the plant list (debug/auxiliary info).
-        plantList.innerHTML = "";
-        plants.forEach((plant) => {
-          const listItem = document.createElement("li");
-          listItem.innerText = `Height ${plant.height}, ${plant.cname1 || "N/A"} - Genus: ${plant.genus}, Species: ${plant.species} (${plant.distance.toFixed(
-            1
-          )}m)`;
-          plantList.appendChild(listItem);
-        });
+        // (Optional) If you previously used a plant list for debugging, you can remove it or comment it out.
+        // plantList.innerHTML = "";
+        // plants.forEach((plant) => {
+        //   const listItem = document.createElement("li");
+        //   listItem.innerText = `Height ${plant.height}, ${plant.cname1 || "N/A"} - Genus: ${plant.genus}, Species: ${plant.species} (${plant.distance.toFixed(1)}m)`;
+        //   plantList.appendChild(listItem);
+        // });
 
         // Create or update markers for each plant.
         plants.forEach((plant) => {
@@ -93,8 +95,8 @@ window.addEventListener("load", () => {
           const heightScale = getAdjustedHeight(plant.height);
           const yPos = heightScale / 2;
 
-          // If a marker already exists, update its location.
           if (plantMarkers[plant.s_id]) {
+            // Update existing marker location.
             plantMarkers[plant.s_id].setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
           } else {
             // Create an entity to hold a 3D model (GLB file).
@@ -106,15 +108,14 @@ window.addEventListener("load", () => {
             marker.setAttribute("gps-new-entity-place", `latitude: ${plant.lat}; longitude: ${plant.lon}`);
             marker.setAttribute("class", "clickable");
 
-            // Show plant details when marker is clicked.
+            // On marker click, display the plant's name at the top.
             marker.addEventListener("click", () => {
-              selectedPlantInfo.innerHTML = `
-                🌱 <strong>${plant.cname1 || "Unknown"}</strong><br>
-                Genus: ${plant.genus || "N/A"}<br>
-                Species: ${plant.species || "N/A"}<br>
-                Distance: ${plant.distance.toFixed(1)} meters<br>
-                Height: ${plant.height || "N/A"}
-              `;
+              plantInfoDisplay.style.display = "block";
+              plantInfoDisplay.textContent = plant.cname1 || "Unknown";
+              // Optionally hide after 3 seconds.
+              setTimeout(() => {
+                plantInfoDisplay.style.display = "none";
+              }, 3000);
             });
 
             scene.appendChild(marker);
@@ -176,7 +177,7 @@ window.addEventListener("load", () => {
 
   // Calculate the distance in meters between two lat/lon points using the Haversine formula.
   function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // Earth’s radius in meters.
+    const R = 6371e3; // Earth's radius in meters.
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -188,7 +189,7 @@ window.addEventListener("load", () => {
   }
 
   // Returns the URL of a GLB model based on the plant's height.
-  // (Make sure these files are in the './models/' folder.)
+  // (Ensure these files are in the './models/' folder.)
   function getPolyModelURL(h) {
     if (h <= 1) {
       return "./models/Shrub.glb";

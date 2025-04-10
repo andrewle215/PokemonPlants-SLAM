@@ -28,21 +28,21 @@
             z-index: 0;
         }
 
-        #info-container {
+        /* New top info container instead of the white bottom box */
+        #plant-info {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 30%;
-            background: white;
-            z-index: 1000;
-            padding: 10px;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
             font-family: sans-serif;
-            overflow-y: auto;
-        }
-
-        button {
-            margin-top: 10px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            z-index: 1000;
+            display: none;
+            /* Initially hidden */
         }
     </style>
 </head>
@@ -55,14 +55,8 @@
         <a-camera gps-new-camera></a-camera>
     </a-scene>
 
-    <div id="info-container">
-        <p>Plants V2 🌺</p>
-        <p id="user-location">Fetching location...</p>
-        <p id="heading">Heading: ...</p>
-        <p id="selected-plant-info">Tap a blue plant marker to see details here</p>
-        <p id="debug-info">Debug Info Below</p>
-        <ol id="plant-list">Closest plants</ol>
-    </div>
+    <!-- New plant info label at the top -->
+    <div id="plant-info"></div>
 
     <!-- Load main script as an ES module -->
     <script type="module" src="./script.js"></script>

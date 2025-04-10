@@ -65,7 +65,7 @@ window.addEventListener("load", () => {
             ...p,
             distance: getDistance(userLat, userLon, p.lat, p.lon),
           }))
-          .filter((p) => p.distance <= 10)
+          .filter((p) => p.distance <= 7)
           .sort((a, b) => a.distance - b.distance)
           .slice(0, 10);
 
@@ -116,7 +116,6 @@ window.addEventListener("load", () => {
           }
         });
 
-        // Remove and updates markers
         for (const id in plantMarkers) {
           if (!plants.find((p) => p.s_id === id)) {
             scene.removeChild(plantMarkers[id]);
@@ -194,13 +193,13 @@ function getScaleFromHeight(h) {
   if (h <= 1) {
     return "1 1 1"; 
   } else if (h > 1 && h <= 1.5) {
-    return "1.1 1.1 1.1"; 
-  } else if (h > 1.5 && h < 3) {
     return "1.5 1.5 1.5"; 
-  } else if (h >= 3 && h <= 4.5) {
-    return "1.7 1.7 1.7"; 
-  } else {
+  } else if (h > 1.5 && h < 3) {
     return "2 2 2"; 
+  } else if (h >= 3 && h <= 4.5) {
+    return "2.2 2.2 2.2"; 
+  } else {
+    return "2.4 2.4 2.4"; 
   }
 }
 

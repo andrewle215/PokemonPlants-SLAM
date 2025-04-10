@@ -66,6 +66,8 @@ window.onload = () => {
             marker.setAttribute("scale", "2 2 2");
             marker.setAttribute("position", `0 ${yPos} 0`);
             marker.setAttribute("look-at", "[gps-new-camera]");
+            marker.setAttribute("material", "transparent: true");
+
 
 
 

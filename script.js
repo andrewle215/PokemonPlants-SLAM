@@ -61,16 +61,14 @@ window.onload = () => {
           const heightScale = getAdjustedHeight(plant.height);
           const yPos = heightScale / 2;
 
-          const marker = document.createElement("a-entity");
-            marker.setAttribute("text", {
-            value: getEmojiForPlant(plant.cname1),
-            align: "center",
-            color: "#000",
-            width: 4
-            });
-            marker.setAttribute("scale", "2 2 2");
+          const marker = document.createElement("a-text");
+            marker.setAttribute("value", getEmojiForPlant(plant.cname1));
+            marker.setAttribute("scale", "5 5 5");
             marker.setAttribute("position", `0 ${yPos} 0`);
+            marker.setAttribute("align", "center");
             marker.setAttribute("look-at", "[gps-new-camera]");
+            marker.setAttribute("font", "https://cdn.aframe.io/fonts/mozillavr.fnt"); // fallback font
+
 
 
           

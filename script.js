@@ -30,7 +30,7 @@ window.addEventListener("load", () => {
 
   // Throttle marker updates to avoid excessive DOM operations.
   let lastMarkerUpdate = 0;
-  const updateInterval = 3000; // update markers every 3 seconds
+  const updateInterval = 10000; // update markers every 3 seconds
 
   // Track camera heading continuously.
   scene.addEventListener("loaded", () => {
@@ -193,13 +193,13 @@ window.addEventListener("load", () => {
     if (h <= 1) {
       return "./models/Shrub.glb";
     } else if (h > 1 && h <= 1.5) {
-      return "./models/Grass.glb";
-    } else if (h > 1.5 && h < 3) {
       return "./models/Bush.glb";
+    } else if (h > 1.5 && h < 3) {
+      return "./models/SmallTree.glb";
     } else if (h >= 3 && h <= 4.5) {
       return "./models/Tree.glb";
     } else {
-      return "./models/Tree.glb";
+      return "./models/BigTree.glb";
     }
   }
 });

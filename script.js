@@ -8,25 +8,23 @@ window.addEventListener("load", () => {
     rotationOffset: offset,
   });
 
-  // Force a layout resize after a short delay.
   setTimeout(() => {
     window.dispatchEvent(new Event("resize"));
     console.log("🔁 Forced layout resize");
   }, 500);
 
   let userMarker = null;
-  // Object to track plant markers keyed by their unique identifier.
   let plantMarkers = {};
 
   const scene = document.querySelector("a-scene");
-  // Use the new top info container for displaying only the plant name.
   const plantInfoDisplay = document.getElementById("plant-info");
 
-  // Throttle marker updates to avoid excessive DOM operations.
   let lastMarkerUpdate = 0;
-  const updateInterval = 10000; // update markers every 10 seconds
+  const updateInterval = 10000; // subsequent updates every 10 seconds
 
-  // Listen for GPS camera updates.
+  // We'll track if we've done an immediate update yet.
+  let firstUpdateDone = false;
+
   camera.addEventListener("gps-camera-update-position", (e) => {
     const userLat = e.detail.position.latitude;
     const userLon = e.detail.position.longitude;
@@ -43,20 +41,26 @@ window.addEventListener("load", () => {
       `latitude: ${userLat}; longitude: ${userLon}`
     );
 
-    // Throttle plant marker updates.
     const now = Date.now();
-    if (now - lastMarkerUpdate > updateInterval) {
-      lastMarkerUpdate = now;
+
+    // If we've never updated before, do an immediate update.
+    if (!firstUpdateDone) {
+      firstUpdateDone = true; // Mark that we've done the initial update
+      lastMarkerUpdate = now; // Record the time so future updates track from here
       updatePlantMarkers(userLat, userLon);
+    } else {
+      // For subsequent updates, apply the 10-second throttle
+      if (now - lastMarkerUpdate > updateInterval) {
+        lastMarkerUpdate = now;
+        updatePlantMarkers(userLat, userLon);
+      }
     }
   });
 
-  // Main function to update plant markers.
   function updatePlantMarkers(userLat, userLon) {
     fetch("./ABG.csv")
       .then((response) => response.text())
       .then((csvText) => {
-        // Parse CSV data and compute each plant's distance.
         const plants = parseCSV(csvText)
           .map((p) => ({
             ...p,
@@ -66,20 +70,16 @@ window.addEventListener("load", () => {
           .sort((a, b) => a.distance - b.distance)
           .slice(0, 10);
 
-        // Create or update markers for each plant.
         plants.forEach((plant) => {
-          // Calculate adjusted height for vertical positioning.
           const heightScale = getAdjustedHeight(plant.height);
           const yPos = heightScale / 2;
 
           if (plantMarkers[plant.s_id]) {
-            // Update an existing marker's location.
             plantMarkers[plant.s_id].setAttribute(
               "gps-new-entity-place",
               `latitude: ${plant.lat}; longitude: ${plant.lon}`
             );
           } else {
-            // Create an entity to hold a 3D model (GLB file).
             const marker = document.createElement("a-entity");
             marker.setAttribute("gltf-model", getPolyModelURL(plant.height));
             marker.setAttribute("scale", "2 2 2");
@@ -91,35 +91,35 @@ window.addEventListener("load", () => {
             );
             marker.setAttribute("class", "clickable");
 
-            // On marker click, display the plant's name at the top.
+            // On marker click, display info
             marker.addEventListener("click", () => {
-            plantInfoDisplay.style.display = "block";
-            plantInfoDisplay.innerHTML = `
+              plantInfoDisplay.style.display = "block";
+              plantInfoDisplay.innerHTML = `
                 <div style="font-size: 1em; font-weight: bold;">
-                Common Name:
+                  Common Name:
                 </div>
-                <div style = "font-size: 0.7em;">
-                ${plant.cname2 ? plant.cname2 + ", " : ""}${plant.cname1 || ""}
+                <div style="font-size: 0.7em;">
+                  ${plant.cname2 ? plant.cname2 + ", " : ""}${plant.cname1 || ""}
                 </div>
                 <div style="font-size: 0.5em;">
-                Genus: ${plant.genus || "N/A"} &nbsp;&nbsp; Species: ${plant.species || "N/A"}
+                  Genus: ${plant.genus || "N/A"} &nbsp;&nbsp;
+                  Species: ${plant.species || "N/A"}
                 </div>
-            `;
-            // Hide the display after 3 seconds.
-            setTimeout(() => {
+              `;
+              // Hide after 3 seconds
+              setTimeout(() => {
                 plantInfoDisplay.style.display = "none";
-            }, 3000);
+              }, 3000);
             });
-
 
             scene.appendChild(marker);
             plantMarkers[plant.s_id] = marker;
           }
         });
 
-        // Remove markers that no longer appear in the CSV data.
+        // Remove old markers
         for (const id in plantMarkers) {
-          if (!plants.find((plant) => plant.s_id === id)) {
+          if (!plants.find((p) => p.s_id === id)) {
             scene.removeChild(plantMarkers[id]);
             delete plantMarkers[id];
           }
@@ -129,14 +129,11 @@ window.addEventListener("load", () => {
   }
 
   // --- Helper Functions ---
-
-  // Parse CSV text into an array of plant objects.
   function parseCSV(csvText) {
     const rows = csvText.split("\n").slice(1);
     return rows
       .map((row) => {
         const columns = row.split(",");
-        // Ensure there are at least 11 columns (indices 0–10).
         while (columns.length < 11) columns.push("");
         return {
           s_id: columns[0]?.trim(),
@@ -148,13 +145,12 @@ window.addEventListener("load", () => {
           cultivar: columns[6]?.trim() || "",
           lon: parseFloat(columns[7]) || 0,
           lat: parseFloat(columns[8]) || 0,
-          height: parseFloat(columns[10]) || 1, // Height is in index 10.
+          height: parseFloat(columns[10]) || 1,
         };
       })
       .filter((p) => p.s_id && p.lat !== 0 && p.lon !== 0);
   }
 
-  // Returns an adjusted height based on a mapping.
   function getAdjustedHeight(h) {
     const mapping = {
       0.5: 0.2,
@@ -169,9 +165,8 @@ window.addEventListener("load", () => {
     return mapping[rounded] || 0.4;
   }
 
-  // Calculate the distance between two lat/lon points using the Haversine formula.
   function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // Earth's radius in meters.
+    const R = 6371e3;
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -182,8 +177,6 @@ window.addEventListener("load", () => {
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
   }
 
-  // Returns the URL of a GLB model based on the plant's height.
-  // (Ensure these files are placed in your "./models/" folder.)
   function getPolyModelURL(h) {
     if (h <= 1) {
       return "./models/Shrub.glb";

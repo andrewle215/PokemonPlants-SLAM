@@ -8,28 +8,27 @@ window.onload = () => {
   const headingDisplay = document.getElementById('heading');
   const plantList = document.getElementById('plant-list');
   const selectedPlantInfo = document.getElementById('selected-plant-info');
+  const debugInfo = document.getElementById('debug-info');
 
   const offset = parseFloat(localStorage.getItem('calibrationOffset') || '0');
-  const debugInfo = document.getElementById('debug-info');
   debugInfo.textContent = `Offset loaded: ${offset}°`;
-  debugInfo.innerHTML = `${offset}`;
 
-  // 🎯 Heading tracker
+  // 🎯 Heading + Pitch Tracker
   scene.addEventListener('loaded', () => {
     scene.addEventListener('frame', () => {
       const rotation = camera.getAttribute('rotation');
-      headingDisplay.textContent = `Heading: ${Math.round(rotation.y)}°`;
+      headingDisplay.textContent = `Heading: ${Math.round(rotation.y)}°, Pitch: ${Math.round(rotation.x)}°`;
     });
   });
 
-  // 📍 Main update logic: only when user moves ~5m
+  // 📍 Main update logic on GPS update
   camera.addEventListener("gps-camera-update-position", (e) => {
     const userLat = e.detail.position.latitude;
     const userLon = e.detail.position.longitude;
 
     userLocation.textContent = `Lat: ${userLat}, Lon: ${userLon}`;
 
-    // 🔴 Red marker (user)
+    // 🔴 Red marker
     if (!userMarker) {
       userMarker = document.createElement("a-box");
       userMarker.setAttribute("scale", "1 1 1");
@@ -55,14 +54,13 @@ window.onload = () => {
           .sort((a, b) => a.distance - b.distance)
           .slice(0, 10);
 
-        // 🔄 Update list + scene
         plantList.innerHTML = "";
 
         plants.forEach(plant => {
           const marker = document.createElement("a-box");
 
           const heightScale = getAdjustedHeight(plant.height);
-          const yPos = heightScale / 2; // place it so base touches ground
+          const yPos = heightScale / 2;
 
           marker.setAttribute("scale", `1 ${heightScale} 1`);
           marker.setAttribute("position", `0 ${yPos} 0`);
@@ -93,38 +91,35 @@ window.onload = () => {
 };
 
 // --- Helpers ---
-
 function parseCSV(csvText) {
   const rows = csvText.split("\n").slice(1);
-  return rows
-    .map(row => {
-      const columns = row.split(",");
-      while (columns.length < 10) columns.push("");
-      return {
-        s_id: columns[0]?.trim(),
-        cname1: columns[1]?.trim() || "Unknown",
-        cname2: columns[2]?.trim() || "",
-        cname3: columns[3]?.trim() || "",
-        genus: columns[4]?.trim() || "Unknown",
-        species: columns[5]?.trim() || "",
-        cultivar: columns[6]?.trim() || "",
-        lon: parseFloat(columns[7]) || 0,
-        lat: parseFloat(columns[8]) || 0,
-        height: parseFloat(columns[9]) || 1
-      };
-    })
-    .filter(p => p.s_id && p.lat !== 0 && p.lon !== 0);
+  return rows.map(row => {
+    const columns = row.split(",");
+    while (columns.length < 10) columns.push("");
+    return {
+      s_id: columns[0]?.trim(),
+      cname1: columns[1]?.trim() || "Unknown",
+      cname2: columns[2]?.trim() || "",
+      cname3: columns[3]?.trim() || "",
+      genus: columns[4]?.trim() || "Unknown",
+      species: columns[5]?.trim() || "",
+      cultivar: columns[6]?.trim() || "",
+      lon: parseFloat(columns[7]) || 0,
+      lat: parseFloat(columns[8]) || 0,
+      height: parseFloat(columns[9]) || 1
+    };
+  }).filter(p => p.s_id && p.lat !== 0 && p.lon !== 0);
 }
 
 function getAdjustedHeight(h) {
   const mapping = {
-    0.5: 0,
-    1: 0.1,
-    1.5: 0.2,
-    2: 0.4,
-    2.5: 0.6,
-    3: 0.9,
-    4.5: 1.3
+    0.5: 0.2,
+    1: 0.3,
+    1.5: 0.45,
+    2: 0.6,
+    2.5: 0.8,
+    3: 1.1,
+    4.5: 1.5
   };
   const rounded = Math.round(h * 10) / 10;
   return mapping[rounded] || 0.4;
@@ -137,10 +132,9 @@ function getDistance(lat1, lon1, lat2, lon2) {
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-  const a =
-    Math.sin(Δφ / 2) ** 2 +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) ** 2;
+  const a = Math.sin(Δφ / 2) ** 2 +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) ** 2;
 
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }

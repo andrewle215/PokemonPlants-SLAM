@@ -2,148 +2,124 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <title>Roots &amp; Routes – AR</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-
-    <!-- A-Frame & AR.js -->
-    <script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe.min.js"></script>
-    <script
-        src="https://cdn.jsdelivr.net/npm/aframe-look-at-component@0.9.0/dist/aframe-look-at-component.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aframe-gps-camera@1.10.4/dist/aframe-gps-camera.min.js"></script>
-
-    <!-- AlvaAR WASM bundle -->
-    <script type="module" src="./alva_ar.js"></script>
+    <meta charset="UTF-8" />
+    <title>Roots &amp; Routes – Calibration</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet" />
     <style>
-        body,
-        html {
+        body {
             margin: 0;
-            height: 100%;
-            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            color: #fff;
+            text-align: center;
+            padding: 1.5rem;
         }
 
-        #plant-info {
+        #compass-wrapper {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 2rem auto;
+        }
+
+        .arrow {
             position: absolute;
-            bottom: 20px;
+            top: 0;
             left: 50%;
             transform: translateX(-50%);
-            padding: 1rem 1.5rem;
-            background: rgba(0, 0, 0, 0.75);
-            color: #fff;
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 40px solid red;
+            z-index: 2;
+        }
+
+        .compass-img {
+            width: 100%;
+            height: 100%;
+            background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Compass_Rose_Fixed.svg/1024px-Compass_Rose_Fixed.svg.png') center no-repeat;
+            background-size: contain;
+            transition: transform .2s ease-out;
+        }
+
+        #heading-value {
+            font-size: 1.3rem;
+            margin-top: 1rem;
+        }
+
+        button {
+            display: block;
+            width: 90%;
+            max-width: 300px;
+            margin: 1rem auto;
+            padding: 1rem;
+            font-size: 1rem;
             border-radius: 8px;
-            font-family: system-ui, sans-serif;
-            display: none;
-            text-align: center;
-            pointer-events: none;
+            border: 2px solid #fff;
+            background: transparent;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+
+        button:hover {
+            background: #fff;
+            color: #000;
         }
     </style>
 </head>
 
 <body>
-    <div id="plant-info"></div>
-    <a-scene embedded renderer="antialias:true" vr-mode-ui="enabled:false" cursor="rayOrigin:mouse">
-        <a-camera id="cam" slam-camera gps-projected-camera="gpsMinDistance:3"></a-camera>
-    </a-scene>
+    <h2>🧭 Calibrate Your Heading</h2>
+    <p>Face true North, then tap “Calibrate” to begin the AR experience.</p>
+    <div id="compass-wrapper">
+        <div class="arrow"></div>
+        <div class="compass-img" id="compass-img"></div>
+    </div>
+    <p id="heading-value">Heading: ...</p>
+    <button id="start-btn">Start Compass</button>
+    <button id="calibrate-btn">Calibrate &amp; Enter AR</button>
 
-    <script type="module">
-        import { AlvaAR } from './alva_ar.js';
-        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.2/build/three.module.js';
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentHeading = 0;
+            const headingDisplay = document.getElementById('heading-value');
+            const compassImg = document.getElementById('compass-img');
+            const startBtn = document.getElementById('start-btn');
+            const calibrateBtn = document.getElementById('calibrate-btn');
 
-        // Read the saved heading offset (in degrees)
-        const headingOffsetDeg = parseFloat(localStorage.getItem('calibrationOffset') || '0');
+            startBtn.addEventListener('click', startCompass);
+            calibrateBtn.addEventListener('click', () => {
+                const offset = (360 - currentHeading + 360) % 360;
+                localStorage.setItem('calibrationOffset', offset);
+                window.location.href = 'ar.html';
+            });
 
-        AFRAME.registerComponent('slam-camera', {
-            schema: { gpsAlignAccuracy: { type: 'number', default: 10 } },
-            async init() {
-                // 1) video stream
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } });
-                this.video = document.createElement('video');
-                Object.assign(this.video, { autoplay: true, muted: true, playsInline: true });
-                this.video.srcObject = stream;
-                await this.video.play();
+            function startCompass() {
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(permission => {
+                            if (permission === 'granted') window.addEventListener('deviceorientation', handleOrientation, true);
+                            else alert('Compass access denied.');
+                        })
+                        .catch(err => alert('Compass not supported.'));
+                } else {
+                    window.addEventListener('deviceorientation', handleOrientation, true);
+                }
+            }
 
-                // 2) off-screen canvas
-                this.canvas = document.createElement('canvas');
-                this.canvas.width = this.video.videoWidth;
-                this.canvas.height = this.video.videoHeight;
-                this.ctx = this.canvas.getContext('2d');
-
-                // 3) init AlvaAR
-                this.alva = await AlvaAR.Initialize(this.canvas.width, this.canvas.height);
-
-                // 4) prepare matrices
-                this.tmpMatrix = new THREE.Matrix4();
-                this.worldOffset = new THREE.Matrix4();
-
-                // 5) GPS anchor + apply calibration heading
-                navigator.geolocation.getCurrentPosition(pos => {
-                    const { latitude, longitude, accuracy } = pos.coords;
-                    if (accuracy > this.data.gpsAlignAccuracy) return;
-                    const scale = 111319.9;
-                    this.worldOffset.makeTranslation(
-                        -(longitude * scale), 0, -(latitude * scale)
-                    );
-                    // rotate world to match true north
-                    const rot = new THREE.Matrix4().makeRotationY(
-                        THREE.Math.degToRad(headingOffsetDeg)
-                    );
-                    this.worldOffset.premultiply(rot);
-                }, console.error, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
-            },
-            tick() {
-                if (!this.alva) return;
-                this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-                const pose = this.alva.findCameraPose(this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height));
-                if (!pose) return;
-                this.tmpMatrix.fromArray(pose).premultiply(this.worldOffset);
-                this.el.object3D.matrixAutoUpdate = false;
-                this.tmpMatrix.decompose(this.el.object3D.position, this.el.object3D.quaternion, this.el.object3D.scale);
+            function handleOrientation(e) {
+                const heading = e.webkitCompassHeading || (360 - e.alpha);
+                if (heading != null && !isNaN(heading)) {
+                    currentHeading = heading;
+                    headingDisplay.textContent = `Heading: ${Math.round(heading)}°`;
+                    compassImg.style.transform = `rotate(${-heading}deg)`;
+                }
             }
         });
-
-        // Plant markers (unchanged)
-        const plantInfoDisplay = document.getElementById('plant-info');
-        const scene = document.querySelector('a-scene');
-        let plantCache = {};
-
-        navigator.geolocation.watchPosition(pos => {
-            const { latitude, longitude } = pos.coords;
-            updatePlantMarkers(latitude, longitude);
-        }, console.error, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
-
-        function updatePlantMarkers(userLat, userLon) {
-            fetch('./ABG.csv').then(r => r.text()).then(csv => {
-                const plants = parseCSV(csv)
-                    .map(p => ({ ...p, distance: getDistance(userLat, userLon, p.lat, p.lon) }))
-                    .filter(p => p.distance <= 10).sort((a, b) => a.distance - b.distance).slice(0, 10);
-                plants.forEach(plant => {
-                    if (plantCache[plant.s_id]) {
-                        plantCache[plant.s_id].setAttribute('gps-projected-entity-place', `latitude:${plant.lat};longitude:${plant.lon}`);
-                    } else {
-                        const marker = document.createElement('a-entity');
-                        marker.setAttribute('gltf-model', getPolyModelURL(plant.height));
-                        marker.setAttribute('scale', getScaleFromHeight(plant.height));
-                        marker.setAttribute('look-at', '#cam');
-                        marker.setAttribute('gps-projected-entity-place', `latitude:${plant.lat};longitude:${plant.lon}`);
-                        marker.classList.add('clickable');
-                        marker.addEventListener('click', () => showPlantInfo(plant));
-                        scene.appendChild(marker);
-                        plantCache[plant.s_id] = marker;
-                    }
-                });
-                Object.keys(plantCache).forEach(id => { if (!plants.find(p => p.s_id === id)) { scene.removeChild(plantCache[id]); delete plantCache[id]; } });
-            });
-        }
-
-        function showPlantInfo(plant) {
-            plantInfoDisplay.innerHTML = `<strong>${plant.cname2 ? plant.cname2 + ', ' : ''}${plant.cname1 || ''}</strong><br>Genus:${plant.genus || 'N/A'} Species:${plant.species || 'N/A'}`;
-            plantInfoDisplay.style.display = 'block'; setTimeout(() => plantInfoDisplay.style.display = 'none', 3000);
-        }
-
-        function parseCSV(csv) { return csv.split('\n').slice(1).map(r => { const c = r.split(','); while (c.length < 11) c.push(''); return { s_id: c[0]?.trim(), cname1: c[1]?.trim() || 'Unknown', cname2: c[2]?.trim() || '', genus: c[4]?.trim() || 'Unknown', species: c[5]?.trim() || '', lon: parseFloat(c[7]) || 0, lat: parseFloat(c[8]) || 0, height: parseFloat(c[10]) || 1 }; }).filter(p => p.s_id && p.lat && p.lon); }
-        function getDistance(lat1, lon1, lat2, lon2) { const R = 6371e3, φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180, Δφ = (lat2 - lat1) * Math.PI / 180, Δλ = (lon2 - lon1) * Math.PI / 180, a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2; return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); }
-        function getPolyModelURL(h) { if (h <= 1) return './models/Shrub.glb'; if (h <= 1.5) return './models/Bush.glb'; if (h < 3) return './models/SmallTree.glb'; if (h <= 4.5) return './models/Tree.glb'; return './models/BigTree.glb'; }
-        function getScaleFromHeight(h) { if (h <= 1) return '1 1 1'; if (h <= 1.5) return '1.5 1.5 1.5'; if (h < 3) return '2 2 2'; if (h <= 4.5) return '2.2 2.2 2.2'; return '2.4 2.4 2.4'; }
     </script>
 </body>
 
